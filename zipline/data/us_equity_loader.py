@@ -124,37 +124,49 @@ class USEquityHistoryLoader(object):
                     dt = m[0]
                     if start < dt <= end:
                         end_loc = days.get_loc(dt)
-                        adjs[end_loc] = [Float64Multiply(0,
-                                                         end_loc - 1,
-                                                         i,
-                                                         i,
-                                                         m[1])]
+                        mult = Float64Multiply(0,
+                                               end_loc - 1,
+                                               i,
+                                               i,
+                                               m[1])
+                        try:
+                            adjs[end_loc].append(mult)
+                        except KeyError:
+                            adjs[end_loc] = [mult]
                 divs = self._adjustments_reader.get_adjustments_for_sid(
                     'dividends', sid)
                 for d in divs:
                     dt = d[0]
                     if start < dt <= end:
                         end_loc = days.get_loc(dt)
-                        adjs[end_loc] = [Float64Multiply(0,
-                                                         end_loc - 1,
-                                                         i,
-                                                         i,
-                                                         d[1])]
+                        mult = Float64Multiply(0,
+                                               end_loc - 1,
+                                               i,
+                                               i,
+                                               d[1])
+                        try:
+                            adjs[end_loc].append(mult)
+                        except KeyError:
+                            adjs[end_loc] = [mult]
             splits = self._adjustments_reader.get_adjustments_for_sid(
                 'splits', sid)
             for s in splits:
                 dt = s[0]
                 if field == 'volume':
-                    ratio = s[1] / 1.0
+                    ratio = 1.0 / s[1]
                 else:
                     ratio = s[1]
                 if start < dt <= end:
                     end_loc = days.get_loc(dt)
-                    adjs[end_loc] = [Float64Multiply(0,
-                                                     end_loc - 1,
-                                                     i,
-                                                     i,
-                                                     ratio)]
+                    mult = Float64Multiply(0,
+                                           end_loc - 1,
+                                           i,
+                                           i,
+                                           ratio)
+                    try:
+                        adjs[end_loc].append(mult)
+                    except KeyError:
+                        adjs[end_loc] = [mult]
         return adjs
 
     def _ensure_sliding_window(
