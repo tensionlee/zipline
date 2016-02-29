@@ -36,8 +36,6 @@ class SlidingWindow(object):
        Index in the overall calendar at which the window starts.
     cal_end : int
        Index in the overall calendar at which the window
-    adjustement_reader : SQLiteAdjustmentReader
-        Reader for adjustment data.
     """
 
     def __init__(self, window, cal_start, cal_end):
@@ -73,7 +71,7 @@ class USEquityHistoryLoader(object):
     ----------
     daily_reader : DailyBarReader
         Reader for daily bars.
-    adjustement_reader : SQLiteAdjustmentReader
+    adjustment_reader : SQLiteAdjustmentReader
         Reader for adjustment data.
     """
 
