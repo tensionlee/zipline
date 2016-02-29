@@ -1031,15 +1031,25 @@ class DailyEquityHistoryTestCase(HistoryTestCaseBase):
 
         for asset in [self.SPLIT_ASSET, self.MERGER_ASSET]:
             # before any of the adjustments
-            window1 = self.data_portal.get_history_window(
+            close_window1 = self.data_portal.get_history_window(
                 [asset],
                 pd.Timestamp("2015-01-05", tz='UTC'),
                 1,
                 "1d",
-                "close"
+                'close',
             )[asset]
 
-            np.testing.assert_array_equal(window1, [2])
+            np.testing.assert_array_equal(close_window1, [2])
+
+            volume_window1 = self.data_portal.get_history_window(
+                [asset],
+                pd.Timestamp("2015-01-05", tz='UTC'),
+                1,
+                "1d",
+                'volume',
+            )[asset]
+
+            np.testing.assert_array_equal(volume_window1, [200])
 
             # straddling the first event
             window2 = self.data_portal.get_history_window(
