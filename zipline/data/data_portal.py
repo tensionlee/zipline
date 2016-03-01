@@ -907,6 +907,11 @@ class DataPortal(object):
         # for a half day, the second half is filled with zeroes.
         # all the minutely bcolz files start on the same day.
 
+        data = self._equity_minute_reader.load_raw_arrays(
+            [field], minutes_for_window, assets)
+
+        import nose; nose.tools.set_trace()
+
         try:
             start_idx = self._equity_minute_reader._find_position_of_minute(
                 minutes_for_window[0])

@@ -630,3 +630,11 @@ class BcolzMinuteBarReader(object):
         mo = self._minute_index[mo_loc]
         delta = minute - mo
         return mo_loc * 390 + delta.astype('int')
+
+    def load_raw_arrays(self, columns, minutes_for_window, assets):
+        
+        shape = (len(minutes_for_window), len(assets))
+        outbuf = np.zeros(shape=shape, dtype=np.uint32)
+
+
+        import nose; nose.tools.set_trace()
