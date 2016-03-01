@@ -193,6 +193,7 @@ class BcolzMinuteBarWriter(object):
                  first_trading_day,
                  rootdir,
                  market_opens,
+                 market_closes,
                  minutes_per_day,
                  ohlc_ratio=OHLC_RATIO,
                  expectedlen=DEFAULT_EXPECTEDLEN):
@@ -630,3 +631,13 @@ class BcolzMinuteBarReader(object):
         mo = self._minute_index[mo_loc]
         delta = minute - mo
         return mo_loc * 390 + delta.astype('int')
+
+    def load_raw_arrays(self, columns, start, end, assets):
+        start_idx = self._find_position_of_minute(start)
+        end_idx = self._find_position_of_minute(end)
+
+        import nose; nose.tools.set_trace()
+
+        # TODO: Parameterize
+        minutes = _calc_minute_index(self._market_index, 390)
+

@@ -58,7 +58,7 @@ class SlidingWindow(object):
         return self.current
 
 
-class USEquityHistoryLoader(object):
+class USEquityDailyHistoryLoader(object):
     """
     Loader for sliding history windows of adjusted US Equity Pricing data.
 
@@ -233,3 +233,16 @@ class USEquityHistoryLoader(object):
         block = self._ensure_sliding_window(assets, start, end, size, field)
         end_ix = self._calendar.get_loc(end)
         return block.get(end_ix)
+
+
+class USEquityMinuteHistoryLoader(object):
+
+    def __init__(self, env, minute_reader, adjustment_reader):
+        self._minute_reader = minute_reader
+        self._adjustments_reader = adjustment_reader
+        self._minute_window_blocks = {}
+
+
+    def _get_minute_window_for_equities(
+            self, assets, field, minutes_for_window):
+        pass
