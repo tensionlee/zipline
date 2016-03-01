@@ -1,81 +1,68 @@
-import pandas as pd
-import sqlalchemy as sa
-from toolz import valmap, merge
-
-from .base import PipelineLoader
-from .earnings import next_earnings_date_frame, previous_earnings_date_frame
-from zipline.pipeline.loaders.synthetic import DataFrameLoader
+from zipline.pipeline.loaders.events import EventsLoader
 from zipline.pipeline.data.dividends import CashDividends
+from zipline.utils.memoize import lazyval
 
 
-class CashDividendsLoader(PipelineLoader):
-    def __init__(self, table, dataset=CashDividends):
-        self._table = table
-        self.dataset = dataset
-        self._column_map = {
-            dataset.next_ex_date: table.c.ex_date,
-            dataset.previous_ex_date: table.c.ex_date,
-            dataset.next_pay_date: table.c.pay_date,
-            dataset.previous_pay_date: table.c.pay_date,
-            dataset.next_record_date: table.c.record_date,
-            dataset.previous_record_date: table.c.record_date,
-        }
+class CashDividendsLoader(EventsLoader):
+    expected_cols = frozenset([EX_DATE_FIELD_NAME,
+                               PAY_DATE_FIELD_NAME,
+                               RECORD_DATE_FIELD_NAME,
+                               CASH_AMOUNT_FIELD_NAME])
 
-    def _load_raw(self, columns):
-        table = self._table
-        to_query = list(
-            {self._column_map[column] for column in columns} |
-            {table.c.declared_date, table.c.sid}
-        )
-        return pd.DataFrame.from_records(
-            list(sa.select(to_query).execute()),
-            columns=[column.name for column in to_query],
-            coerce_floats=True,
+    def __init__(self, all_dates, events_by_sid,
+                 infer_timestamps=False,
+                 dataset=CashDividends):
+        super(CashDividendsLoader, self).__init__(
+            all_dates, events_by_sid, infer_timestamps, dataset=dataset,
         )
 
-    @staticmethod
-    def _load_date(column, dates, assets, raw, gb, mask):
-        name = column.name
-        if name.startswith('next_'):
-            prefix = 'next_'
-            to_frame = next_earnings_date_frame
-        elif name.startswith('previous_'):
-            prefix = 'previous_'
-            to_frame = previous_earnings_date_frame
-        else:
-            raise AssertionError(
-                "column name should start with 'next_' or 'previous_',"
-                ' got %r' % name,
-            )
+    @lazyval
+    def next_ex_date_loader(self):
+        return self._next_event_date_loader(self.dataset.next_ex_date,
+                                            EX_DATE_FIELD_NAME)
 
-        def mkseries(idx, raw_loc=raw.loc):
-            vs = raw_loc[
-                idx, ['declared_date', name[len(prefix):]],
-            ].values
-            return pd.Series(
-                index=pd.DatetimeIndex(vs[:, 0]),
-                data=vs[:, 1],
-            )
+    @lazyval
+    def previous_ex_date_loader(self):
+        return self._previous_event_date_loader(
+            self.dataset.previous_ex_date,
+            EX_DATE_FIELD_NAME
+        )
 
-        return DataFrameLoader(
-            column,
-            to_frame(
-                dates,
-                valmap(mkseries, gb.groups),
-            ),
-            adjustments=None,
-        ).load_adjustmented_array([column], dates, assets, mask)
+    @lazyval
+    def next_pay_date_loader(self):
+        return self._next_event_date_loader(self.dataset.next_pay_date,
+                                            PAY_DATE_FIELD_NAME)
 
-    def load_adjustmented_array(self, columns, dates, assets, mask):
-        if set(columns).isdisjoint(self.dataset.columns):
-            raise ValueError(
-                'columns could not be loaded: %r' %
-                set(columns).symetric_difference(self.dataset.columns),
-            )
+    @lazyval
+    def previous_pay_date_loader(self):
+        return self._previous_event_date_loader(
+            self.dataset.previous_pay_date,
+            PAY_DATE_FIELD_NAME
+        )
 
-        raw = self._load_raw(columns)
-        gb = raw[raw['sid'].isin(assets)].groupby('sid')
-        return merge(*(
-            self._load_date(column, dates, assets, raw, gb, mask)
-            for column in columns
-        ))
+    @lazyval
+    def next_record_date_loader(self):
+        return self._next_event_date_loader(self.dataset.next_record_date,
+                                            RECORD_DATE_FIELD_NAME)
+
+    @lazyval
+    def previous_record_date_loader(self):
+        return self._previous_event_date_loader(
+            self.dataset.previous_record_date,
+            RECORD_DATE_FIELD_NAME
+        )
+
+    @lazyval
+    def next_amount_loader(self):
+        return self._next_event_value_loader(self.dataset.next_amount_date,
+                                             PAY_DATE_FIELD_NAME,
+                                             CASH_AMOUNT_FIELD_NAME)
+
+
+    @lazyval
+    def previous_amount_loader(self):
+        return self._previous_event_value_loader(
+            self.dataset.previous_amount_date,
+            PAY_DATE_FIELD_NAME,
+            CASH_AMOUNT_FIELD_NAME
+        )
