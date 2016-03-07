@@ -702,10 +702,9 @@ class DataPortal(object):
         Internal method that returns a dataframe containing history bars
         of minute frequency for the given sids.
         """
-        # get all the minutes for this window
-        minutes_for_window = self.env.market_minute_window(
-            end_dt, bar_count, step=-1)[::-1]
-
+        end_loc = self.env.market_minutes.get_loc(end_dt)
+        minutes_for_window = self.env.market_minutes[
+            end_loc - bar_count + 1:end_loc + 1]
         first_trading_day = self._equity_minute_reader.first_trading_day
 
         # but then cut it down to only the minutes after
