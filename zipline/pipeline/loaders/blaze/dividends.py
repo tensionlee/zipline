@@ -3,7 +3,6 @@ from zipline.pipeline.common import (
     CASH_AMOUNT_FIELD_NAME,
     EX_DATE_FIELD_NAME,
     PAY_DATE_FIELD_NAME,
-    RECORD_DATE_FIELD_NAME,
     SID_FIELD_NAME,
     TS_FIELD_NAME,
 )
@@ -40,7 +39,6 @@ class BlazeCashDividendsLoader(BlazeEventsLoader):
            {TS_FIELD_NAME}: datetime,
            {EX_DATE_FIELD_NAME}: ?datetime,
            {PAY_DATE_FIELD_NAME}: ?datetime,
-           {RECORD_DATE_FIELD_NAME}: ?datetime,
            {CASH_AMOUNT_FIELD_NAME}: ?datetime,
            {ANNOUNCEMENT_FIELD_NAME}: ?datetime,
        }}
@@ -58,7 +56,6 @@ class BlazeCashDividendsLoader(BlazeEventsLoader):
         SID_FIELD_NAME=SID_FIELD_NAME,
         EX_DATE_FIELD_NAME=EX_DATE_FIELD_NAME,
         PAY_DATE_FIELD_NAME=PAY_DATE_FIELD_NAME,
-        RECORD_DATE_FIELD_NAME=RECORD_DATE_FIELD_NAME,
         CASH_AMOUNT_FIELD_NAME=CASH_AMOUNT_FIELD_NAME,
         ANNOUNCEMENT_FIELD_NAME=ANNOUNCEMENT_FIELD_NAME
     )
@@ -68,7 +65,6 @@ class BlazeCashDividendsLoader(BlazeEventsLoader):
         SID_FIELD_NAME,
         EX_DATE_FIELD_NAME,
         PAY_DATE_FIELD_NAME,
-        RECORD_DATE_FIELD_NAME,
         CASH_AMOUNT_FIELD_NAME,
         ANNOUNCEMENT_FIELD_NAME
     })

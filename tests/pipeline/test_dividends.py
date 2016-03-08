@@ -12,25 +12,23 @@ from six import iteritems
 
 from zipline.pipeline.common import (
     ANNOUNCEMENT_FIELD_NAME,
-    DAYS_SINCE_PREV,
     DAYS_SINCE_PREV_DIVIDEND_ANNOUNCEMENT,
     DAYS_SINCE_PREV_EX_DATE,
-    DAYS_TO_NEXT,
     DAYS_TO_NEXT_EX_DATE,
     NEXT_AMOUNT,
-    NEXT_ANNOUNCEMENT,
     NEXT_EX_DATE,
     NEXT_PAY_DATE,
-    NEXT_RECORD_DATE,
     PREVIOUS_ANNOUNCEMENT,
     PREVIOUS_EX_DATE,
     PREVIOUS_PAY_DATE,
-    PREVIOUS_RECORD_DATE,
     PREVIOUS_AMOUNT,
     SID_FIELD_NAME,
     TS_FIELD_NAME,
-    AD_FIELD_NAME, CASH_AMOUNT_FIELD_NAME, EX_DATE_FIELD_NAME,
-    RECORD_DATE_FIELD_NAME, PAY_DATE_FIELD_NAME)
+    AD_FIELD_NAME,
+    CASH_AMOUNT_FIELD_NAME,
+    EX_DATE_FIELD_NAME,
+    PAY_DATE_FIELD_NAME
+)
 from zipline.pipeline.data.dividends import CashDividends
 from zipline.pipeline.factors.events import (
     BusinessDaysSinceDividendAnnouncement,
@@ -53,34 +51,29 @@ dividends = [
     pd.DataFrame({
         CASH_AMOUNT_FIELD_NAME: [1, 15],
         EX_DATE_FIELD_NAME: [],
-        RECORD_DATE_FIELD_NAME: [],
         PAY_DATE_FIELD_NAME: []
     }),
     # K1--K2--A2--A1.
     pd.DataFrame({
         CASH_AMOUNT_FIELD_NAME: [7, 13],
         EX_DATE_FIELD_NAME: [],
-        RECORD_DATE_FIELD_NAME: [],
         PAY_DATE_FIELD_NAME: []
     }),
     # K1--A1--K2--A2.
     pd.DataFrame({
         CASH_AMOUNT_FIELD_NAME: [3, 1],
         EX_DATE_FIELD_NAME: [],
-        RECORD_DATE_FIELD_NAME: [],
         PAY_DATE_FIELD_NAME: []
     }),
     # K1 == K2.
     pd.DataFrame({
         CASH_AMOUNT_FIELD_NAME: [6, 23],
         EX_DATE_FIELD_NAME: [],
-        RECORD_DATE_FIELD_NAME: [],
         PAY_DATE_FIELD_NAME: []
     }),
     pd.DataFrame(
         columns=[CASH_AMOUNT_FIELD_NAME,
                  EX_DATE_FIELD_NAME,
-                 RECORD_DATE_FIELD_NAME,
                  PAY_DATE_FIELD_NAME],
         dtype='datetime64[ns]'
     ),
@@ -112,8 +105,6 @@ class CashDividendsLoaderTestCase(TestCase, EventLoaderCommonMixin):
         PREVIOUS_ANNOUNCEMENT: CashDividends.previous_announcement_date.latest,
         NEXT_PAY_DATE: CashDividends.next_pay_date.latest,
         PREVIOUS_PAY_DATE: CashDividends.previous_pay_date.latest,
-        NEXT_RECORD_DATE: CashDividends.next_record_date.latest,
-        PREVIOUS_RECORD_DATE: CashDividends.previous_record_date.latest,
         NEXT_AMOUNT: CashDividends.next_amount.latest,
         PREVIOUS_AMOUNT: CashDividends.previous_amount.latest,
         DAYS_SINCE_PREV_DIVIDEND_ANNOUNCEMENT:
@@ -121,6 +112,34 @@ class CashDividendsLoaderTestCase(TestCase, EventLoaderCommonMixin):
         DAYS_TO_NEXT_EX_DATE: BusinessDaysUntilNextExDate(),
         DAYS_SINCE_PREV_EX_DATE: BusinessDaysSincePreviousExDate()
     }
+
+    event_dates_cases = [
+        # K1--K2--E1--E2.
+        pd.DataFrame({
+            TS_FIELD_NAME: pd.to_datetime(['2014-01-05', '2014-01-10']),
+            AD_FIELD_NAME: pd.to_datetime(['2014-01-15', '2014-01-20'])
+        }),
+        # K1--K2--E2--E1.
+        pd.DataFrame({
+            TS_FIELD_NAME: pd.to_datetime(['2014-01-05', '2014-01-10']),
+            AD_FIELD_NAME: pd.to_datetime(['2014-01-20', '2014-01-15'])
+        }),
+        # K1--E1--K2--E2.
+        pd.DataFrame({
+            TS_FIELD_NAME: pd.to_datetime(['2014-01-05', '2014-01-15']),
+            AD_FIELD_NAME: pd.to_datetime(['2014-01-10', '2014-01-20'])
+        }),
+        # K1 == K2.
+        pd.DataFrame({
+            TS_FIELD_NAME: pd.to_datetime(['2014-01-05'] * 2),
+            AD_FIELD_NAME: pd.to_datetime(['2014-01-10', '2014-01-15'])
+        }),
+        pd.DataFrame({
+            TS_FIELD_NAME: pd.to_datetime([]),
+            AD_FIELD_NAME: pd.to_datetime([])
+        })
+    ]
+
 
     @classmethod
     def setUpClass(cls):
@@ -164,11 +183,6 @@ class CashDividendsLoaderTestCase(TestCase, EventLoaderCommonMixin):
             dates
         )
         self.cols[PREVIOUS_PAY_DATE] = _expected_previous_pay_date
-        _expected_next_record_date = self.get_expected_next_event_dates(dates)
-        self.cols[NEXT_RECORD_DATE] = _expected_next_record_date
-        _expected_previous_record_date = \
-            self.get_expected_previous_event_dates(dates)
-        self.cols[PREVIOUS_RECORD_DATE] = _expected_previous_record_date
         # TODO: fix amounts for next/previous to correct ones
         _expected_next_amount = pd.DataFrame({
             0: zip_with_floats_dates(
