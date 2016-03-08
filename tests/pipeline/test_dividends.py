@@ -1,6 +1,7 @@
 """
 Tests for the reference loader for EarningsCalendar.
 """
+from functools import partial
 from unittest import TestCase
 
 import blaze as bz
@@ -145,21 +146,93 @@ class CashDividendsLoaderTestCase(TestCase, EventLoaderCommonMixin):
         cls._cleanup_stack.close()
 
     def setup(self, dates):
+        zip_with_floats_dates = partial(self.zip_with_floats, dates)
+        num_days_between_dates = partial(self.num_days_between, dates)
         _expected_previous_announce = self.get_expected_previous_event_dates(
             dates
         )
         self.cols[PREVIOUS_ANNOUNCEMENT] = _expected_previous_announce
+        _expected_next_ex_date = self.get_expected_previous_event_dates(dates)
         self.cols[NEXT_EX_DATE] = _expected_next_ex_date
+        _expected_previous_ex_date = self.get_expected_previous_event_dates(
+            dates
+        )
         self.cols[PREVIOUS_EX_DATE] = _expected_previous_ex_date
+        _expected_next_pay_date = self.get_expected_next_event_dates(dates)
         self.cols[NEXT_PAY_DATE] = _expected_next_pay_date
+        _expected_previous_pay_date = self.get_expected_previous_event_dates(
+            dates
+        )
         self.cols[PREVIOUS_PAY_DATE] = _expected_previous_pay_date
+        _expected_next_record_date = self.get_expected_next_event_dates(dates)
         self.cols[NEXT_RECORD_DATE] = _expected_next_record_date
+        _expected_previous_record_date = \
+            self.get_expected_previous_event_dates(dates)
         self.cols[PREVIOUS_RECORD_DATE] = _expected_previous_record_date
-        self.cols[NEXT_AMOUNT] =_expected_next_amount
+        # TODO: fix amounts for next/previous to correct ones
+        _expected_next_amount = pd.DataFrame({
+            0: zip_with_floats_dates(
+                ['NaN'] * num_days_between_dates(None, '2014-01-14') +
+                [1] * num_days_between_dates('2014-01-15', '2014-01-19') +
+                [15] * num_days_between_dates('2014-01-20', None)
+            ),
+            1: zip_with_floats_dates(
+                ['NaN'] * num_days_between_dates(None, '2014-01-14') +
+                [13] * num_days_between_dates('2014-01-15', '2014-01-19') +
+                [7] * num_days_between_dates('2014-01-20', None)
+            ),
+            2: zip_with_floats_dates(
+                ['NaN'] * num_days_between_dates(None, '2014-01-09') +
+                [3] * num_days_between_dates('2014-01-10', '2014-01-19') +
+                [1] * num_days_between_dates('2014-01-20', None)
+            ),
+            3: zip_with_floats_dates(
+                ['NaN'] * num_days_between_dates(None, '2014-01-09') +
+                [6] * num_days_between_dates('2014-01-10', '2014-01-14') +
+                [23] * num_days_between_dates('2014-01-15', None)
+            ),
+            4: zip_with_floats_dates(['NaN'] * len(dates)),
+        }, index=dates)
+        self.cols[NEXT_AMOUNT] = _expected_next_amount
+        _expected_previous_amount = pd.DataFrame({
+            0: zip_with_floats_dates(
+                ['NaN'] * num_days_between_dates(None, '2014-01-14') +
+                [1] * num_days_between_dates('2014-01-15', '2014-01-19') +
+                [15] * num_days_between_dates('2014-01-20', None)
+            ),
+            1: zip_with_floats_dates(
+                ['NaN'] * num_days_between_dates(None, '2014-01-14') +
+                [13] * num_days_between_dates('2014-01-15', '2014-01-19') +
+                [7] * num_days_between_dates('2014-01-20', None)
+            ),
+            2: zip_with_floats_dates(
+                ['NaN'] * num_days_between_dates(None, '2014-01-09') +
+                [3] * num_days_between_dates('2014-01-10', '2014-01-19') +
+                [1] * num_days_between_dates('2014-01-20', None)
+            ),
+            3: zip_with_floats_dates(
+                ['NaN'] * num_days_between_dates(None, '2014-01-09') +
+                [6] * num_days_between_dates('2014-01-10', '2014-01-14') +
+                [23] * num_days_between_dates('2014-01-15', None)
+            ),
+            4: zip_with_floats_dates(['NaN'] * len(dates)),
+        }, index=dates)
         self.cols[PREVIOUS_AMOUNT] = _expected_previous_amount
+        _expected_days_since_prev_dividend_announcement =  \
+            self._compute_busday_offsets(
+                self.cols[PREVIOUS_ANNOUNCEMENT]
+            )
         self.cols[DAYS_SINCE_PREV_DIVIDEND_ANNOUNCEMENT] = \
             _expected_days_since_prev_dividend_announcement
+        _expected_days_to_next_ex_date =  \
+            self._compute_busday_offsets(
+                self.cols[DAYS_TO_NEXT_EX_DATE]
+            )
         self.cols[DAYS_TO_NEXT_EX_DATE] = _expected_days_to_next_ex_date
+        _expected_days_since_prev_ex_date =  \
+            self._compute_busday_offsets(
+                self.cols[DAYS_SINCE_PREV_EX_DATE]
+            )
         self.cols[DAYS_SINCE_PREV_EX_DATE] = _expected_days_since_prev_ex_date
 
 
