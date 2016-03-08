@@ -16,6 +16,7 @@ class _Dividends(DataSet):
     previous_pay_date = Column(datetime64ns_dtype)
     next_record_date = Column(datetime64ns_dtype)
     previous_record_date = Column(datetime64ns_dtype)
+    previous_announcement_date = Column(datetime64ns_dtype)
 
 
 class CashDividends(_Dividends):
