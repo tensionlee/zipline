@@ -145,17 +145,8 @@ class CashDividendsLoaderTestCase(TestCase, EventLoaderCommonMixin):
         cls._cleanup_stack.close()
 
     def setup(self, dates):
-        _expected_next_announce = self.get_expected_next_event_dates(dates)
-
         _expected_previous_announce = self.get_expected_previous_event_dates(
             dates
-        )
-
-        _expected_next_busday_offsets = self._compute_busday_offsets(
-            _expected_next_announce
-        )
-        _expected_previous_busday_offsets = self._compute_busday_offsets(
-            _expected_previous_announce
         )
         self.cols[PREVIOUS_ANNOUNCEMENT] = _expected_previous_announce
         self.cols[NEXT_EX_DATE] = _expected_next_ex_date
