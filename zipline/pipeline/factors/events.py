@@ -7,7 +7,8 @@ from zipline.pipeline.data.buyback_auth import (
     CashBuybackAuthorizations,
     ShareBuybackAuthorizations
 )
-from zipline.pipeline.data.dividends import CashDividends
+from zipline.pipeline.data.dividends import CashDividends, \
+    DividendsByAnnouncementDate, DividendsByExDate
 from zipline.pipeline.data.earnings import EarningsCalendar
 from zipline.utils.numpy_utils import (
     NaTD,
@@ -171,7 +172,7 @@ class BusinessDaysSinceDividendAnnouncement(
     --------
     zipline.pipeline.factors.BusinessDaysSinceDividendAnnouncement
     """
-    inputs = [CashDividends.previous_announcement_date]
+    inputs = [DividendsByAnnouncementDate.announcement_date]
 
 
 class BusinessDaysUntilNextExDate(
@@ -186,7 +187,7 @@ class BusinessDaysUntilNextExDate(
     --------
     zipline.pipeline.factors.BusinessDaysSinceDividendAnnouncement
     """
-    inputs = [CashDividends.next_ex_date]
+    inputs = [DividendsByExDate.next_ex_date]
 
 
 class BusinessDaysSincePreviousExDate(
@@ -201,4 +202,4 @@ class BusinessDaysSincePreviousExDate(
     --------
     zipline.pipeline.factors.BusinessDaysSinceDividendAnnouncement
     """
-    inputs = [CashDividends.previous_ex_date]
+    inputs = [DividendsByExDate.previous_ex_date]
