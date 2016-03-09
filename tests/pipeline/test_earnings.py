@@ -30,7 +30,6 @@ from zipline.pipeline.loaders.blaze import (
     BlazeEarningsCalendarLoader,
 )
 from zipline.utils.test_utils import (
-    make_simple_equity_info,
     tmp_asset_finder,
 )
 
