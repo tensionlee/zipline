@@ -29,6 +29,10 @@ from zipline.pipeline.loaders.earnings import EarningsCalendarLoader
 from zipline.pipeline.loaders.blaze import (
     BlazeEarningsCalendarLoader,
 )
+from zipline.utils.test_utils import (
+    make_simple_equity_info,
+    tmp_asset_finder,
+)
 
 from zipline.testing import tmp_asset_finder
 

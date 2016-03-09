@@ -7,6 +7,10 @@ from zipline.pipeline.data.buyback_auth import (
     CashBuybackAuthorizations,
     ShareBuybackAuthorizations
 )
+from zipline.pipeline.data.dividends import (
+    DividendsByAnnouncementDate,
+    DividendsByExDate
+)
 from zipline.pipeline.data.earnings import EarningsCalendar
 from zipline.utils.numpy_utils import (
     NaTD,
