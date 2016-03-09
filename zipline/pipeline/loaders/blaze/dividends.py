@@ -82,7 +82,7 @@ class BlazeDividendsByAnnouncementDateLoader(BlazeEventsLoader):
                    data_query_tz=data_query_tz, **kwargs)
 
 
-class DividendsByExDateLoader(BlazeEventsLoader):
+class BlazeDividendsByExDateLoader(BlazeEventsLoader):
     """A pipeline loader for the ``DividendsByExDate`` dataset that loads
     data from a blaze expression.
 
@@ -145,14 +145,14 @@ class DividendsByExDateLoader(BlazeEventsLoader):
                  dataset=DividendsByExDate,
                  **kwargs):
         super(
-            DividendsByExDateLoader, self
+            BlazeDividendsByExDateLoader, self
         ).__init__(expr, dataset=dataset,
                    resources=resources, odo_kwargs=odo_kwargs,
                    data_query_time=data_query_time,
                    data_query_tz=data_query_tz, **kwargs)
 
 
-class DividendsByPayDateLoader(BlazeEventsLoader):
+class BlazeDividendsByPayDateLoader(BlazeEventsLoader):
     """A pipeline loader for the ``DividendsByPayDate`` dataset that loads
     data from a blaze expression.
 
@@ -215,7 +215,7 @@ class DividendsByPayDateLoader(BlazeEventsLoader):
                  dataset=DividendsByPayDate,
                  **kwargs):
         super(
-            DividendsByPayDateLoader, self
+            BlazeDividendsByPayDateLoader, self
         ).__init__(expr, dataset=dataset,
                    resources=resources, odo_kwargs=odo_kwargs,
                    data_query_time=data_query_time,
