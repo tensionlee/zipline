@@ -174,7 +174,7 @@ class BusinessDaysSinceDividendAnnouncement(
     --------
     zipline.pipeline.factors.BusinessDaysSinceDividendAnnouncement
     """
-    inputs = [DividendsByAnnouncementDate.announcement_date]
+    inputs = [DividendsByAnnouncementDate.previous_announcement_date]
 
 
 class BusinessDaysUntilNextExDate(

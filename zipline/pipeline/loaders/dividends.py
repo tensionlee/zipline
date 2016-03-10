@@ -32,17 +32,11 @@ class DividendsByAnnouncementDateLoader(EventsLoader):
         )
 
     @lazyval
-    def next_amount_loader(self):
-        return self._next_event_value_loader(self.dataset.next_amount_date,
-                                             PAY_DATE_FIELD_NAME,
-                                             ANNOUNCEMENT_FIELD_NAME)
-
-    @lazyval
     def previous_amount_loader(self):
         return self._previous_event_value_loader(
-            self.dataset.previous_amount_date,
-            PAY_DATE_FIELD_NAME,
-            ANNOUNCEMENT_FIELD_NAME
+            self.dataset.previous_amount,
+            ANNOUNCEMENT_FIELD_NAME,
+            CASH_AMOUNT_FIELD_NAME
         )
 
 

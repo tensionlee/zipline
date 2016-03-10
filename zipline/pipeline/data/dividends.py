@@ -21,5 +21,5 @@ class DividendsByPayDate(DataSet):
 
 
 class DividendsByAnnouncementDate(DataSet):
-    announcement_date = Column(datetime64ns_dtype)
-    amount = Column(float64_dtype)
+    previous_announcement_date = Column(datetime64ns_dtype)
+    previous_amount = Column(float64_dtype)

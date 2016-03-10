@@ -1,5 +1,5 @@
 """
-Tests for the reference loader for EarningsCalendar.
+Tests for the reference loader for Dividends datasets.
 """
 from functools import partial
 from unittest import TestCase
@@ -26,7 +26,6 @@ from zipline.pipeline.common import (
     PREVIOUS_AMOUNT,
     SID_FIELD_NAME,
     TS_FIELD_NAME,
-    AD_FIELD_NAME,
     CASH_AMOUNT_FIELD_NAME,
     EX_DATE_FIELD_NAME,
     PAY_DATE_FIELD_NAME
@@ -38,10 +37,10 @@ from zipline.pipeline.factors.events import (
     BusinessDaysSincePreviousExDate,
     BusinessDaysUntilNextExDate
 )
-from zipline.pipeline.loaders.earnings import EarningsCalendarLoader
-from zipline.pipeline.loaders.blaze import (
-    BlazeEarningsCalendarLoader,
-)
+from zipline.pipeline.loaders.blaze.dividends import \
+    BlazeDividendsByAnnouncementDateLoader, BlazeDividendsByPayDateLoader
+from zipline.pipeline.loaders.dividends import DividendsByAnnouncementDateLoader, \
+    DividendsByExDateLoader, DividendsByPayDateLoader
 from zipline.utils.test_utils import (
     make_simple_equity_info,
     tmp_asset_finder,
@@ -91,15 +90,13 @@ dividends_cases = [
     ),
 ]
 
-date_intervals = [[None, '2014-01-14'], ['2014-01-15', '2014-01-19'],
-                  ['2014-01-20', None]]
 
-
-def get_values_for_date_ranges(zip_with_floats_dates,
+def get_values_for_date_ranges(zip_vals_dates,
                                num_days_between_dates,
-                               vals_for_date_intervals):
+                               vals_for_date_intervals,
+                               date_intervals):
     # Fill in given values for given date ranges.
-    return zip_with_floats_dates(
+    return zip_vals_dates(
         list(
             itertools.chain(*[
                 [val] * num_days_between_dates(*date_intervals[i])
@@ -111,42 +108,52 @@ def get_values_for_date_ranges(zip_with_floats_dates,
 
 def get_previous_amounts_for_dates(zip_with_floats_dates,
                                    num_days_between_dates,
-                                   dates):
+                                   dates,
+                                   date_invervals):
     return pd.DataFrame({
             0: get_values_for_date_ranges(zip_with_floats_dates,
                                           num_days_between_dates,
-                                          ['NaN', 1, 15]),
+                                          ['NaN', 1, 15],
+                                          date_invervals[0]),
             1: get_values_for_date_ranges(zip_with_floats_dates,
                                           num_days_between_dates,
-                                          ['NaN', 13, 7]),
+                                          ['NaN', 7, 13],
+                                          date_invervals[1]),
             2: get_values_for_date_ranges(zip_with_floats_dates,
                                           num_days_between_dates,
-                                          ['NaN', 3, 1]),
+                                          ['NaN', 3, 1],
+                                          date_invervals[2]),
+            # Assume the latest of 2 cash values is used if we find out about 2
+            # announcements that happened on the same day for the same sid.
             3: get_values_for_date_ranges(zip_with_floats_dates,
                                           num_days_between_dates,
-                                          ['NaN', 6, 23]),
+                                          ['NaN', 23],
+                                          date_invervals[3]),
             4: zip_with_floats_dates(['NaN'] * len(dates)),
         }, index=dates)
 
 
 class DividendsByAnnouncementDateTestCase(TestCase, EventLoaderCommonMixin):
     """
-    Tests for loading the earnings announcement data.
+    Tests for loading the dividends by announcement date data.
     """
     pipeline_columns = {
         PREVIOUS_ANNOUNCEMENT:
-            DividendsByAnnouncementDate.announcement_date.latest,
-        PREVIOUS_AMOUNT: DividendsByAnnouncementDate.amount.latest,
+            DividendsByAnnouncementDate.previous_announcement_date.latest,
+        PREVIOUS_AMOUNT: DividendsByAnnouncementDate.previous_amount.latest,
         DAYS_SINCE_PREV_DIVIDEND_ANNOUNCEMENT:
             BusinessDaysSinceDividendAnnouncement(),
     }
 
+    @classmethod
+    def get_sids(cls):
+        return range(0, 5)
 
     @classmethod
     def setUpClass(cls):
         cls._cleanup_stack = stack = ExitStack()
         equity_info = make_simple_equity_info(
-            cls.sids,
+            cls.get_sids(),
             start_date=pd.Timestamp('2013-01-01', tz='UTC'),
             end_date=pd.Timestamp('2015-01-01', tz='UTC'),
         )
@@ -160,7 +167,7 @@ class DividendsByAnnouncementDateTestCase(TestCase, EventLoaderCommonMixin):
             tmp_asset_finder(equities=equity_info),
         )
 
-        cls.loader_type = EarningsCalendarLoader
+        cls.loader_type = DividendsByAnnouncementDateLoader
 
     @classmethod
     def tearDownClass(cls):
@@ -171,24 +178,47 @@ class DividendsByAnnouncementDateTestCase(TestCase, EventLoaderCommonMixin):
         num_days_between_dates = partial(self.num_days_between, dates)
         num_days_between_for_dates = partial(self.num_days_between, dates)
         zip_with_dates_for_dates = partial(self.zip_with_dates, dates)
+        date_intervals = [
+            [
+                [None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
+                ['2014-01-10', None]
+            ],
+            [
+                [None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
+                ['2014-01-10', None]
+            ],
+            [
+               [None, '2014-01-04'], ['2014-01-05', '2014-01-14'],
+               ['2014-01-15', None]
+            ],
+            [
+               [None, '2014-01-04'], ['2014-01-05', None]
+            ]
+        ]
+
         self.cols[PREVIOUS_ANNOUNCEMENT] = pd.DataFrame({
-            0: get_values_for_date_ranges(zip_with_floats_dates,
+            0: get_values_for_date_ranges(zip_with_dates_for_dates,
                                           num_days_between_for_dates,
-                                          ['NaT', '2014-01-04', '2014-01-09']),
-            1: get_values_for_date_ranges(zip_with_floats_dates,
+                                          ['NaT', '2014-01-04', '2014-01-09'],
+                                          date_intervals[0]),
+            1: get_values_for_date_ranges(zip_with_dates_for_dates,
                                           num_days_between_for_dates,
-                                          ['NaT', '2014-01-04', '2014-01-09']),
-            2: get_values_for_date_ranges(zip_with_floats_dates,
+                                          ['NaT', '2014-01-04', '2014-01-09'],
+                                          date_intervals[1]),
+            2: get_values_for_date_ranges(zip_with_dates_for_dates,
                                           num_days_between_for_dates,
-                                          ['NaT', '2014-01-04', '2014-01-14']),
-            3: get_values_for_date_ranges(zip_with_floats_dates,
+                                          ['NaT', '2014-01-04', '2014-01-14'],
+                                          date_intervals[2]),
+            3: get_values_for_date_ranges(zip_with_dates_for_dates,
                                           num_days_between_for_dates,
-                                          ['NaT', '2014-01-04', '2014-01-04']),
+                                          ['NaT', '2014-01-04'],
+                                          date_intervals[3]),
             4: zip_with_dates_for_dates(['NaT'] * len(dates)),
         }, index=dates)
 
         self.cols[PREVIOUS_AMOUNT] = get_previous_amounts_for_dates(
-            zip_with_floats_dates, num_days_between_dates, dates
+            zip_with_floats_dates, num_days_between_dates, dates,
+            date_intervals
         )
 
         self.cols[
@@ -196,9 +226,51 @@ class DividendsByAnnouncementDateTestCase(TestCase, EventLoaderCommonMixin):
         ] = self._compute_busday_offsets(self.cols[PREVIOUS_ANNOUNCEMENT])
 
 
+class BlazeDividendsByAnnouncementDateTestCase(
+    DividendsByAnnouncementDateTestCase
+):
+    @classmethod
+    def setUpClass(cls):
+        super(BlazeDividendsByAnnouncementDateTestCase, cls).setUpClass()
+        cls.loader_type = DividendsByAnnouncementDateLoader
+
+    def loader_args(self, dates):
+        _, mapping = super(
+            BlazeDividendsByAnnouncementDateTestCase,
+            self,
+        ).loader_args(dates)
+        return (bz.Data(pd.concat(
+            pd.DataFrame({
+                ANNOUNCEMENT_FIELD_NAME: df[ANNOUNCEMENT_FIELD_NAME],
+                TS_FIELD_NAME: df[TS_FIELD_NAME],
+                SID_FIELD_NAME: sid,
+                CASH_AMOUNT_FIELD_NAME: df[CASH_AMOUNT_FIELD_NAME]
+            })
+            for sid, df in iteritems(mapping)
+        ).reset_index(drop=True)),)
+
+
+class BlazeDividendsByAnnouncementDateNotInteractiveTestCase(
+        BlazeDividendsByAnnouncementDateTestCase):
+    """Test case for passing a non-interactive symbol and a dict of resources.
+    """
+    @classmethod
+    def setUpClass(cls):
+        super(BlazeDividendsByAnnouncementDateNotInteractiveTestCase,
+              cls).setUpClass()
+        cls.loader_type = BlazeDividendsByAnnouncementDateLoader
+
+    def loader_args(self, dates):
+        (bound_expr,) = super(
+            BlazeDividendsByAnnouncementDateNotInteractiveTestCase,
+            self,
+        ).loader_args(dates)
+        return swap_resources_into_scope(bound_expr, {})
+
+
 class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
     """
-    Tests for loading the earnings announcement data.
+    Tests for loading the dividends by ex date data.
     """
     pipeline_columns = {
         NEXT_EX_DATE: DividendsByExDate.previous_ex_date.latest,
@@ -210,10 +282,14 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
     }
 
     @classmethod
+    def get_sids(cls):
+        return range(0, 5)
+
+    @classmethod
     def setUpClass(cls):
         cls._cleanup_stack = stack = ExitStack()
         equity_info = make_simple_equity_info(
-            cls.sids,
+            cls.get_sids(),
             start_date=pd.Timestamp('2013-01-01', tz='UTC'),
             end_date=pd.Timestamp('2015-01-01', tz='UTC'),
         )
@@ -227,7 +303,7 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
             tmp_asset_finder(equities=equity_info),
         )
 
-        cls.loader_type = EarningsCalendarLoader
+        cls.loader_type = DividendsByExDateLoader
 
     @classmethod
     def tearDownClass(cls):
@@ -284,9 +360,49 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
         )
 
 
+class BlazeDividendsByExDateLoaderTestCase(DividendsByExDateTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(BlazeDividendsByExDateLoaderTestCase, cls).setUpClass()
+        cls.loader_type = DividendsByExDateLoader
+
+    def loader_args(self, dates):
+        _, mapping = super(
+            BlazeDividendsByExDateLoaderTestCase,
+            self,
+        ).loader_args(dates)
+        return (bz.Data(pd.concat(
+            pd.DataFrame({
+                EX_DATE_FIELD_NAME: df[EX_DATE_FIELD_NAME],
+                TS_FIELD_NAME: df[TS_FIELD_NAME],
+                SID_FIELD_NAME: sid,
+                CASH_AMOUNT_FIELD_NAME: df[CASH_AMOUNT_FIELD_NAME]
+            })
+            for sid, df in iteritems(mapping)
+        ).reset_index(drop=True)),)
+
+
+class BlazeDividendsByExDateLoaderNotInteractiveTestCase(
+        BlazeDividendsByExDateLoaderTestCase):
+    """Test case for passing a non-interactive symbol and a dict of resources.
+    """
+    @classmethod
+    def setUpClass(cls):
+        super(BlazeDividendsByExDateLoaderNotInteractiveTestCase,
+              cls).setUpClass()
+        cls.loader_type = DividendsByExDateLoader
+
+    def loader_args(self, dates):
+        (bound_expr,) = super(
+            BlazeDividendsByExDateLoaderNotInteractiveTestCase,
+            self,
+        ).loader_args(dates)
+        return swap_resources_into_scope(bound_expr, {})
+
+
 class DividendsByPayDateTestCase(TestCase, EventLoaderCommonMixin):
     """
-    Tests for loading the earnings announcement data.
+    Tests for loading the dividends by pay date data.
     """
     pipeline_columns = {
         NEXT_PAY_DATE: DividendsByPayDate.next_pay_date.latest,
@@ -295,12 +411,15 @@ class DividendsByPayDateTestCase(TestCase, EventLoaderCommonMixin):
         PREVIOUS_AMOUNT: DividendsByPayDate.previous_amount.latest,
     }
 
+    @classmethod
+    def get_sids(cls):
+        return range(0, 5)
 
     @classmethod
     def setUpClass(cls):
         cls._cleanup_stack = stack = ExitStack()
         equity_info = make_simple_equity_info(
-            cls.sids,
+            cls.get_sids(),
             start_date=pd.Timestamp('2013-01-01', tz='UTC'),
             end_date=pd.Timestamp('2015-01-01', tz='UTC'),
         )
@@ -314,7 +433,7 @@ class DividendsByPayDateTestCase(TestCase, EventLoaderCommonMixin):
             tmp_asset_finder(equities=equity_info),
         )
 
-        cls.loader_type = EarningsCalendarLoader
+        cls.loader_type = DividendsByPayDateLoader
 
     @classmethod
     def tearDownClass(cls):
@@ -378,40 +497,41 @@ class DividendsByPayDateTestCase(TestCase, EventLoaderCommonMixin):
         self.cols[PREVIOUS_AMOUNT] = _expected_previous_amount
 
 
-class BlazeEarningsCalendarLoaderTestCase(EarningsCalendarLoaderTestCase):
+class BlazeDividendsByPayDateLoaderTestCase(DividendsByPayDateTestCase):
     @classmethod
     def setUpClass(cls):
-        super(BlazeEarningsCalendarLoaderTestCase, cls).setUpClass()
-        cls.loader_type = BlazeEarningsCalendarLoader
+        super(BlazeDividendsByPayDateLoaderTestCase, cls).setUpClass()
+        cls.loader_type = DividendsByPayDateLoader
 
     def loader_args(self, dates):
         _, mapping = super(
-            BlazeEarningsCalendarLoaderTestCase,
+            BlazeDividendsByPayDateLoaderTestCase,
             self,
         ).loader_args(dates)
         return (bz.Data(pd.concat(
             pd.DataFrame({
-                ANNOUNCEMENT_FIELD_NAME: df[ANNOUNCEMENT_FIELD_NAME],
+                PAY_DATE_FIELD_NAME: df[PAY_DATE_FIELD_NAME],
                 TS_FIELD_NAME: df[TS_FIELD_NAME],
                 SID_FIELD_NAME: sid,
+                CASH_AMOUNT_FIELD_NAME: df[CASH_AMOUNT_FIELD_NAME]
             })
             for sid, df in iteritems(mapping)
         ).reset_index(drop=True)),)
 
 
-class BlazeEarningsCalendarLoaderNotInteractiveTestCase(
-        BlazeEarningsCalendarLoaderTestCase):
+class BlazeDividendsByPayDateLoaderNotInteractiveTestCase(
+        BlazeDividendsByPayDateLoaderTestCase):
     """Test case for passing a non-interactive symbol and a dict of resources.
     """
     @classmethod
     def setUpClass(cls):
-        super(BlazeEarningsCalendarLoaderNotInteractiveTestCase,
+        super(BlazeDividendsByPayDateLoaderNotInteractiveTestCase,
               cls).setUpClass()
-        cls.loader_type = BlazeEarningsCalendarLoader
+        cls.loader_type = BlazeDividendsByPayDateLoader
 
     def loader_args(self, dates):
         (bound_expr,) = super(
-            BlazeEarningsCalendarLoaderNotInteractiveTestCase,
+            BlazeDividendsByPayDateLoaderNotInteractiveTestCase,
             self,
         ).loader_args(dates)
         return swap_resources_into_scope(bound_expr, {})
