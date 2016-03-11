@@ -32,7 +32,7 @@ from zipline.assets.asset_writer import (
 from zipline.errors import (
     NoFurtherDataError
 )
-
+from zipline.utils.memoize import lazyval
 
 log = logbook.Logger('Trading')
 
@@ -93,10 +93,6 @@ class TradingEnvironment(object):
 
         self.open_and_closes = env_trading_calendar.open_and_closes.loc[
             self.trading_days]
-
-        self.market_minutes = self.minutes_for_days_in_range(
-            self.first_trading_day,
-            self.last_trading_day)
 
         self.bm_symbol = bm_symbol
         if not load:
@@ -228,6 +224,11 @@ class TradingEnvironment(object):
                                exchanges=None, root_symbols=None):
         AssetDBWriterFromDataFrame(equities, futures, exchanges, root_symbols)\
             .write_all(self.engine)
+
+    @lazyval
+    def market_minutes(self):
+        return self.minutes_for_days_in_range(self.first_trading_day,
+                                              self.last_trading_day)
 
     def normalize_date(self, test_date):
         test_date = pd.Timestamp(test_date, tz='UTC')
