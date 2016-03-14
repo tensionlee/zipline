@@ -8,9 +8,11 @@ from six.moves import zip
 from zipline.utils.numpy_utils import NaTns
 
 
-def next_date_frame(dates, events_by_sid, event_date_field_name):
+def next_event_frame(dates, events_by_sid, event_date_field_name,
+                     missing_value, return_field_name):
     """
-    Make a DataFrame representing the simulated next known date for an event.
+    Make a DataFrame representing the simulated next known dates or values
+    for an event.
 
     Parameters
     ----------
@@ -37,7 +39,7 @@ def next_date_frame(dates, events_by_sid, event_date_field_name):
     previous_date_frame
     """
     cols = {
-        equity: np.full_like(dates, NaTns) for equity in events_by_sid
+        equity: np.full_like(dates, missing_value) for equity in events_by_sid
     }
     raw_dates = dates.values
     for equity, df in iteritems(events_by_sid):
@@ -54,8 +56,8 @@ def next_date_frame(dates, events_by_sid, event_date_field_name):
                 (knowledge_date <= raw_dates) &
                 (raw_dates <= event_date)
             )
-            value_mask = (event_date <= data) | (data == NaTns)
-            data[date_mask & value_mask] = event_date
+            value_mask = (event_date <= data) | (data == missing_value)
+            data[date_mask & value_mask] = return_field_name
 
     return pd.DataFrame(index=dates, data=cols)
 
