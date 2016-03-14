@@ -20,7 +20,13 @@ from os.path import (
 )
 
 import pandas as pd
-from pandas import read_csv, datetime, Timestamp
+from pandas import (
+    read_csv,
+    datetime,
+    Timestamp,
+    Timedelta,
+    date_range,
+)
 from pandas.util.testing import assert_frame_equal
 import pytz
 
@@ -77,13 +83,27 @@ class ExchangeCalendarTestBase(object):
                 self.calendar.is_open_on_minute(pre_market)
             )
 
-    def test_opens_and_closes(self):
+    def test_open_and_close(self):
         for index, row in self.answers.iterrows():
-            o_and_c = self.calendar.opens_and_closes(index)
+            o_and_c = self.calendar.open_and_close(index)
             self.assertEqual(o_and_c[0],
                              row['market_open'].tz_localize('UTC'))
             self.assertEqual(o_and_c[1],
                              row['market_close'].tz_localize('UTC'))
+
+    def test_no_nones_from_open_and_close(self):
+        """
+        Ensures that, for all minutes in a week, the open_and_close method
+        never returns a tuple of Nones.
+        """
+        start_week = Timestamp('11/18/2012 12:00AM', tz='EST')
+        end_week = start_week + Timedelta(days=7)
+        minutes_in_week = date_range(start_week, end_week, freq='Min')
+
+        for dt in minutes_in_week:
+            open, close = self.calendar.open_and_close(dt)
+            self.assertIsNotNone(open, "Open value is None")
+            self.assertIsNotNone(close, "Close value is None")
 
     # def test_minutes_for_date(self):
     #     for date in self.answers.index:

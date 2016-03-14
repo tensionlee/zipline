@@ -295,7 +295,7 @@ class ExchangeCalendar(with_metaclass(ABCMeta)):
         raise NotImplementedError()
 
     @abstractmethod
-    def opens_and_closes(self, date):
+    def open_and_close(self, date):
         """
         Given a UTC-canonicalized date, returns a tuple of timestamps of the
         open and close of the exchange session on that date.

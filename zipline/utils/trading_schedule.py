@@ -84,16 +84,67 @@ class TradingSchedule(object):
         raise NotImplementedError()
 
     @abstractmethod
-    def last_n_minutes(self, end, n):
+    def minute_window(self, start, count, step=1):
         """
-        Calculates a trailing window of trading minutes back from the
-        given end.
+        Return a DatetimeIndex containing `count` market minutes, starting with
+        `start` and continuing `step` minutes at a time.
 
         Parameters
         ----------
-        end : Timestamp
-            The end of the trailing window.
-        n : int
+        start : Timestamp
+            The start of the window.
+        count : int
             The number of minutes needed.
+        step : int
+            The step size by which to increment.
+
+        Returns
+        -------
+        DatetimeIndex
+            A window with @count minutes, starting with @start a returning
+            every @step minute.
         """
         raise NotImplementedError()
+
+
+class ExchangeTradingSchedule(TradingSchedule):
+    """
+    A TradingSchedule that functions as a wrapper around an ExchangeCalendar.
+    """
+
+    def __init__(self, cal):
+        """
+        Docstring goes here, Jimmy
+
+        Parameters
+        ----------
+        cal : ExchangeCalendar
+            The ExchangeCalendar to be represented by this
+            ExchangeTradingSchedule.
+        """
+        self._exchange_calendar = cal
+
+    def data_availability_time(self, date):
+        """
+        See TradingSchedule definition.
+        """
+        calendar_open, _ = self._exchange_calendar.open_and_close(date)
+        return calendar_open
+
+    def start_and_end(self, date):
+        """
+        See TradingSchedule definition.
+        """
+        return self._exchange_calendar.open_and_close(date)
+
+    def is_execution_time(self, dt):
+        """
+        See TradingSchedule definition.
+        """
+        return self._exchange_calendar.is_open_on_minute(dt)
+
+    def minute_window(self, start, count, step=1):
+        return self._exchange_calendar.minute_window(start=start,
+                                                     count=count,
+                                                     step=step)
+

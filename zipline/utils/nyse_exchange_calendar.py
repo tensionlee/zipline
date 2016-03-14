@@ -322,7 +322,7 @@ class NYSEExchangeCalendar(ExchangeCalendar):
         # Retrieve the exchange session relevant for this datetime
         session = self.session_date(dt)
         # Retrieve the open and close for this exchange session
-        open, close = self.opens_and_closes(session)
+        open, close = self.open_and_close(session)
         # Is @dt within the trading hours for this exchange session
         return open <= dt and dt <= close
 
@@ -340,8 +340,8 @@ class NYSEExchangeCalendar(ExchangeCalendar):
         bool
             True if  exchange is open at any time during the day containing @dt
         """
-        dt_canonical = self.session_date(dt)
-        return dt_canonical in self.schedule.index
+        dt_normalized = self.normalize_date(dt)
+        return dt_normalized in self.schedule.index
 
     def trading_days(self, start, end):
         """
@@ -371,10 +371,10 @@ class NYSEExchangeCalendar(ExchangeCalendar):
         end_session += Timedelta(days=1)
         return self.schedule.loc[start_session:end_session]
 
-    def opens_and_closes(self, dt):
+    def open_and_close(self, dt):
         """
         Given a datetime, returns a tuple of timestamps of the
-        open and close of the exchange session containg the datetime.
+        open and close of the exchange session containing the datetime.
 
         SD: Should we accept an arbitrary datetime, or should we first map it
         to and exchange session using session_date. Need to check what the
@@ -391,7 +391,28 @@ class NYSEExchangeCalendar(ExchangeCalendar):
             The open and close for the given dt.
         """
         session = self.session_date(dt)
-        o_and_c = self.schedule.loc[session]
+        return self._get_open_and_close(session)
+
+    def _get_open_and_close(self, session_date):
+        """
+        Retrieves the open and close for a given session.
+
+        Parameters
+        ----------
+        session_date : Timestamp
+            The canonicalized session_date whose open and close are needed.
+
+        Returns
+        -------
+        (Timestamp, Timestamp) or (None, None)
+            The open and close for the given dt, or Nones if the given date is
+            not a session.
+        """
+        # Return a tuple of nones if the given date is not a session.
+        if session_date not in self.schedule.index:
+            return (None, None)
+
+        o_and_c = self.schedule.loc[session_date]
         # `market_open` and `market_close` should be timezone aware, but pandas
         # 0.16.1 does not appear to support this:
         # http://pandas.pydata.org/pandas-docs/stable/whatsnew.html#datetime-with-tz  # noqa
@@ -415,8 +436,11 @@ class NYSEExchangeCalendar(ExchangeCalendar):
         Timestamp
             The date of the exchange session in which dt belongs.
         """
-        dt_utc = dt.astimezone(timezone('UTC'))
-        return dt_utc.replace(hour=0, minute=0, second=0)
+
+        #
+        while not self.is_open_on_date(dt):
+            dt += Timedelta(days=1)
+        return self.normalize_date(dt)
 
     def minutes_for_date(self, dt):
         """
@@ -440,7 +464,7 @@ class NYSEExchangeCalendar(ExchangeCalendar):
             given dt.
         """
         session = self.session_date(dt)
-        open, close = self.opens_and_closes(session)
+        open, close = self.open_and_close(session)
         return date_range(open, close, freq='min', tz='UTC')
 
     def minute_window(self, start, count, step=1):

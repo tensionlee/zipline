@@ -340,10 +340,6 @@ class CMEExchangeCalendar(ExchangeCalendar):
         and exchange session using session_date. Need to check what the
         consumers expect. Here, I assume we need to map it to a session.
 
-        Should this be changed to opens_and_closes, and have this return a
-        pd.DataFrame of opens and closes, to account for the fact that there
-        can be trading pauses.
-
         Parameters
         ----------
         session : Timestamp
