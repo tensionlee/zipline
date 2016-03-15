@@ -10,8 +10,9 @@ from zipline.utils.numpy_utils import NaTns
 
 def next_event_frame(events_by_sid, dates,
                      missing_value,
+                     field_dtype,
                      event_date_field_name,
-                     return_field_name):
+                     return_field_name,):
     """
     Make a DataFrame representing the simulated next known dates or values
     for an event.
@@ -41,7 +42,9 @@ def next_event_frame(events_by_sid, dates,
     previous_date_frame
     """
     cols = {
-        equity: np.full_like(dates, missing_value) for equity in events_by_sid
+        equity: np.full(len(dates), missing_value, dtype=field_dtype) for equity
+        in
+        events_by_sid
     }
     raw_dates = dates.values
     for equity, df in iteritems(events_by_sid):

@@ -171,6 +171,7 @@ class EventsLoader(PipelineLoader):
                 self.events_by_sid,
                 self.all_dates,
                 next_date_field.missing_value,
+                next_date_field.dtype,
                 event_date_field_name,
                 event_date_field_name
             ),
@@ -187,6 +188,7 @@ class EventsLoader(PipelineLoader):
                 self.events_by_sid,
                 self.all_dates,
                 next_value_field.missing_value,
+                next_value_field.dtype,
                 event_date_field_name,
                 value_field_name
             ),
