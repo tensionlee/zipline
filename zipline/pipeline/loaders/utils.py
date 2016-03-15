@@ -8,8 +8,10 @@ from six.moves import zip
 from zipline.utils.numpy_utils import NaTns
 
 
-def next_event_frame(dates, events_by_sid, event_date_field_name,
-                     missing_value, return_field_name):
+def next_event_frame(events_by_sid, dates,
+                     missing_value,
+                     event_date_field_name,
+                     return_field_name):
     """
     Make a DataFrame representing the simulated next known dates or values
     for an event.
@@ -57,7 +59,8 @@ def next_event_frame(dates, events_by_sid, event_date_field_name,
                 (raw_dates <= event_date)
             )
             value_mask = (event_date <= data) | (data == missing_value)
-            data[date_mask & value_mask] = return_field_name
+            data[date_mask & value_mask] = df.loc[knowledge_date,
+                                                  return_field_name]
 
     return pd.DataFrame(index=dates, data=cols)
 

@@ -106,7 +106,7 @@ def get_values_for_date_ranges(zip_vals_dates,
     )
 
 
-def get_previous_vals_for_dates(zip_with_floats_dates,
+def get_vals_for_dates(zip_with_floats_dates,
                                    num_days_between_dates,
                                    dates,
                                    date_invervals,
@@ -202,12 +202,12 @@ class DividendsByAnnouncementDateTestCase(TestCase, EventLoaderCommonMixin):
                  ['NaT', '2014-01-04']]
         amounts = [['NaN', 1, 15], ['NaN', 7, 13], ['NaN', 3, 1], ['NaN', 23]]
 
-        self.cols[PREVIOUS_ANNOUNCEMENT] = get_previous_vals_for_dates(
+        self.cols[PREVIOUS_ANNOUNCEMENT] = get_vals_for_dates(
             zip_with_dates_for_dates, num_days_between_for_dates, dates,
             date_intervals, announcement_dates
         )
 
-        self.cols[PREVIOUS_AMOUNT] = get_previous_vals_for_dates(
+        self.cols[PREVIOUS_AMOUNT] = get_vals_for_dates(
             zip_with_floats_dates, num_days_between_dates, dates,
             date_intervals, amounts
         )
@@ -317,7 +317,7 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
             ],
             [
                [None, '2014-01-09'], ['2014-01-10', '2014-01-19'],
-               ['2014-01-10', None]
+               ['2014-01-20', None]
             ],
             [
                [None, '2014-01-09'], ['2014-01-10', '2014-01-14'],
@@ -327,8 +327,8 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
 
         next_date_intervals = [
             [
-                [None, '2014-01-04'], ['2014-01-05', '2014-01-15'],
-                ['2014-01-15', '2014-01-20'], ['2014-01-21', None]
+                [None, '2014-01-04'], ['2014-01-05', '2014-01-14'],
+                ['2014-01-15', '2014-01-19'], ['2014-01-20', None]
             ],
             [
                 [None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
@@ -336,13 +336,13 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
                 ['2014-01-21', None]
             ],
             [
-                [None, '2014-01-04'], ['2014-01-05', '2014-01-10'],
-                ['2014-01-11', '2014-01-14'], ['2014-01-15', '2014-01-20'],
-                ['2014-01-21', None]
+                [None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
+                ['2014-01-10', '2014-01-14'], ['2014-01-15', '2014-01-19'],
+                ['2014-01-20', None]
             ],
             [
-                [None, '2014-01-04'], ['2014-01-05', '2014-01-10'],
-                ['2014-01-11', '2014-01-15'], ['2014-01-16', None]
+                [None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
+                ['2014-01-10', '2014-01-14'], ['2014-01-15', None]
             ]
         ]
 
@@ -354,7 +354,7 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
                                            '2014-01-20', 'NaT'],
                                    ['NaT', '2014-01-10', '2014-01-15',
                                            'NaT']]
-        self.cols[NEXT_EX_DATE] = get_previous_vals_for_dates(
+        self.cols[NEXT_EX_DATE] = get_vals_for_dates(
             zip_with_dates_for_dates, num_days_between_for_dates, dates,
             next_date_intervals, next_announcement_dates
         )
@@ -362,7 +362,7 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
                                    ['NaT', '2014-01-15', '2014-01-20'],
                                    ['NaT', '2014-01-10', '2014-01-20'],
                                    ['NaT', '2014-01-10', '2014-01-15']]
-        self.cols[PREVIOUS_EX_DATE] = get_previous_vals_for_dates(
+        self.cols[PREVIOUS_EX_DATE] = get_vals_for_dates(
             zip_with_dates_for_dates, num_days_between_for_dates, dates,
             prev_date_intervals, prev_announcement_dates
         )
@@ -371,7 +371,7 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
                         ['NaN', 7, 13, 7, 'NaN'],
                         ['NaN', 3, 'NaN', 1, 'NaN'],
                         ['NaN', 6, 23, 'NaN']]
-        self.cols[NEXT_AMOUNT] = get_previous_vals_for_dates(
+        self.cols[NEXT_AMOUNT] = get_vals_for_dates(
             zip_with_floats_dates, num_days_between_dates,
             dates, next_date_intervals, next_amounts
         )
@@ -380,22 +380,17 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
                         ['NaN', 13, 7],
                         ['NaN', 3, 1],
                         ['NaN', 6, 23]]
-        self.cols[PREVIOUS_AMOUNT] = get_previous_vals_for_dates(
+        self.cols[PREVIOUS_AMOUNT] = get_vals_for_dates(
             zip_with_floats_dates, num_days_between_dates,
             dates, prev_date_intervals, prev_amounts
         )
 
-        self.cols[DAYS_SINCE_PREV_DIVIDEND_ANNOUNCEMENT] = \
-            self._compute_busday_offsets(
-                self.cols[PREVIOUS_ANNOUNCEMENT]
-            )
-
         self.cols[DAYS_TO_NEXT_EX_DATE] = self._compute_busday_offsets(
-                self.cols[DAYS_TO_NEXT_EX_DATE]
+                self.cols[NEXT_EX_DATE]
         )
 
         self.cols[DAYS_SINCE_PREV_EX_DATE] = self._compute_busday_offsets(
-                self.cols[DAYS_SINCE_PREV_EX_DATE]
+                self.cols[PREVIOUS_EX_DATE]
         )
 
 

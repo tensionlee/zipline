@@ -103,14 +103,14 @@ class DividendsByExDateLoader(EventsLoader):
 
     @lazyval
     def next_amount_loader(self):
-        return self._next_event_value_loader(self.dataset.next_amount_date,
+        return self._next_event_value_loader(self.dataset.next_amount,
                                              EX_DATE_FIELD_NAME,
                                              CASH_AMOUNT_FIELD_NAME)
 
     @lazyval
     def previous_amount_loader(self):
         return self._previous_event_value_loader(
-            self.dataset.previous_amount_date,
+            self.dataset.previous_amount,
             EX_DATE_FIELD_NAME,
             CASH_AMOUNT_FIELD_NAME
         )
