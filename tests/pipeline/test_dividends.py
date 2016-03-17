@@ -46,7 +46,8 @@ from zipline.utils.test_utils import (
     make_simple_equity_info,
     tmp_asset_finder,
 )
-
+from zipline.pipeline.loaders.utils import get_values_for_date_ranges, \
+    zip_with_dates, zip_with_floats
 
 dividends_cases = [
     # K1--K2--A1--A2.
@@ -153,46 +154,30 @@ next_amounts = [['NaN', 1, 15, 'NaN'],
                 ['NaN', 6, 23, 'NaN']]
 
 
-def get_values_for_date_ranges(zip_vals_dates,
-                               num_days_between_dates,
-                               vals_for_date_intervals,
-                               date_intervals):
-    # Fill in given values for given date ranges.
-    return zip_vals_dates(
-        list(
-            itertools.chain(*[
-                [val] * num_days_between_dates(*date_intervals[i])
-                for i, val in enumerate(vals_for_date_intervals)
-            ])
-        )
-    )
-
-
-def get_vals_for_dates(zip_with_floats_dates,
-                       num_days_between_dates,
-                       dates,
+def get_vals_for_dates(zip_date_index_with_vals,
+                       vals,
                        date_invervals,
-                       vals):
+                       dates):
     return pd.DataFrame({
-            0: get_values_for_date_ranges(zip_with_floats_dates,
-                                          num_days_between_dates,
+            0: get_values_for_date_ranges(zip_date_index_with_vals,
                                           vals[0],
-                                          date_invervals[0]),
-            1: get_values_for_date_ranges(zip_with_floats_dates,
-                                          num_days_between_dates,
+                                          date_invervals[0],
+                                          dates),
+            1: get_values_for_date_ranges(zip_date_index_with_vals,
                                           vals[1],
-                                          date_invervals[1]),
-            2: get_values_for_date_ranges(zip_with_floats_dates,
-                                          num_days_between_dates,
+                                          date_invervals[1],
+                                          dates),
+            2: get_values_for_date_ranges(zip_date_index_with_vals,
                                           vals[2],
-                                          date_invervals[2]),
+                                          date_invervals[2],
+                                          dates),
             # Assume the latest of 2 cash values is used if we find out about 2
             # announcements that happened on the same day for the same sid.
-            3: get_values_for_date_ranges(zip_with_floats_dates,
-                                          num_days_between_dates,
+            3: get_values_for_date_ranges(zip_date_index_with_vals,
                                           vals[3],
-                                          date_invervals[3]),
-            4: zip_with_floats_dates(['NaN'] * len(dates)),
+                                          date_invervals[3],
+                                          dates),
+            4: zip_date_index_with_vals(dates, ['NaN'] * len(dates)),
         }, index=dates)
 
 
@@ -237,10 +222,6 @@ class DividendsByAnnouncementDateTestCase(TestCase, EventLoaderCommonMixin):
         cls._cleanup_stack.close()
 
     def setup(self, dates):
-        zip_with_floats_dates = partial(self.zip_with_floats, dates)
-        num_days_between_dates = partial(self.num_days_between, dates)
-        num_days_between_for_dates = partial(self.num_days_between, dates)
-        zip_with_dates_for_dates = partial(self.zip_with_dates, dates)
         date_intervals = [
             [
                 [None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
@@ -259,19 +240,17 @@ class DividendsByAnnouncementDateTestCase(TestCase, EventLoaderCommonMixin):
             ]
         ]
         announcement_dates = [['NaT', '2014-01-04', '2014-01-09'],
-                 ['NaT', '2014-01-04', '2014-01-09'],
-                 ['NaT', '2014-01-04', '2014-01-14'],
-                 ['NaT', '2014-01-04']]
+                              ['NaT', '2014-01-04', '2014-01-09'],
+                              ['NaT', '2014-01-04', '2014-01-14'],
+                              ['NaT', '2014-01-04']]
         amounts = [['NaN', 1, 15], ['NaN', 7, 13], ['NaN', 3, 1], ['NaN', 23]]
 
         self.cols[PREVIOUS_ANNOUNCEMENT] = get_vals_for_dates(
-            zip_with_dates_for_dates, num_days_between_for_dates, dates,
-            date_intervals, announcement_dates
+            zip_with_dates, announcement_dates, date_intervals, dates
         )
 
         self.cols[PREVIOUS_AMOUNT] = get_vals_for_dates(
-            zip_with_floats_dates, num_days_between_dates, dates,
-            date_intervals, amounts
+            zip_with_floats, amounts, date_intervals, dates
         )
 
         self.cols[
@@ -363,29 +342,20 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
         cls._cleanup_stack.close()
 
     def setup(self, dates):
-        zip_with_floats_dates = partial(self.zip_with_floats, dates)
-        num_days_between_dates = partial(self.num_days_between, dates)
-        num_days_between_for_dates = partial(self.num_days_between, dates)
-        zip_with_dates_for_dates = partial(self.zip_with_dates, dates)
-
         self.cols[NEXT_EX_DATE] = get_vals_for_dates(
-            zip_with_dates_for_dates, num_days_between_for_dates, dates,
-            next_date_intervals, next_ex_and_pay_dates
+            zip_with_dates, next_ex_and_pay_dates, next_date_intervals, dates,
         )
 
         self.cols[PREVIOUS_EX_DATE] = get_vals_for_dates(
-            zip_with_dates_for_dates, num_days_between_for_dates, dates,
-            prev_date_intervals, prev_ex_and_pay_dates
+            zip_with_dates, prev_ex_and_pay_dates, prev_date_intervals, dates
         )
 
         self.cols[NEXT_AMOUNT] = get_vals_for_dates(
-            zip_with_floats_dates, num_days_between_dates,
-            dates, next_date_intervals, next_amounts
+            zip_with_floats, next_amounts, next_date_intervals, dates
         )
 
         self.cols[PREVIOUS_AMOUNT] = get_vals_for_dates(
-            zip_with_floats_dates, num_days_between_dates,
-            dates, prev_date_intervals, prev_amounts
+            zip_with_floats, prev_amounts, prev_date_intervals, dates
         )
 
         self.cols[DAYS_TO_NEXT_EX_DATE] = self._compute_busday_offsets(
@@ -477,28 +447,19 @@ class DividendsByPayDateTestCase(TestCase, EventLoaderCommonMixin):
         cls._cleanup_stack.close()
 
     def setup(self, dates):
-        zip_with_floats_dates = partial(self.zip_with_floats, dates)
-        num_days_between_dates = partial(self.num_days_between, dates)
-        num_days_between_for_dates = partial(self.num_days_between, dates)
-        zip_with_dates_for_dates = partial(self.zip_with_dates, dates)
-
         self.cols[NEXT_PAY_DATE] = get_vals_for_dates(
-            zip_with_dates_for_dates, num_days_between_for_dates, dates,
-            next_date_intervals, next_ex_and_pay_dates
+            zip_with_dates, next_ex_and_pay_dates, next_date_intervals, dates
         )
         self.cols[PREVIOUS_PAY_DATE] = get_vals_for_dates(
-            zip_with_dates_for_dates, num_days_between_for_dates, dates,
-            prev_date_intervals, prev_ex_and_pay_dates
+            zip_with_dates, prev_ex_and_pay_dates, prev_date_intervals, dates
         )
 
         self.cols[NEXT_AMOUNT] = get_vals_for_dates(
-            zip_with_floats_dates, num_days_between_dates,
-            dates, next_date_intervals, next_amounts
+            zip_with_floats, next_amounts, next_date_intervals, dates
         )
 
         self.cols[PREVIOUS_AMOUNT] = get_vals_for_dates(
-            zip_with_floats_dates, num_days_between_dates,
-            dates, prev_date_intervals, prev_amounts
+            zip_with_floats, prev_amounts, prev_date_intervals, dates
         )
 
 
