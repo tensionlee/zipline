@@ -326,8 +326,8 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
     Tests for loading the dividends by ex date data.
     """
     pipeline_columns = {
-        NEXT_EX_DATE: DividendsByExDate.previous_ex_date.latest,
-        PREVIOUS_EX_DATE: DividendsByExDate.next_ex_date.latest,
+        NEXT_EX_DATE: DividendsByExDate.next_ex_date.latest,
+        PREVIOUS_EX_DATE: DividendsByExDate.previous_ex_date.latest,
         NEXT_AMOUNT: DividendsByExDate.next_amount.latest,
         PREVIOUS_AMOUNT: DividendsByExDate.previous_amount.latest,
         DAYS_TO_NEXT_EX_DATE: BusinessDaysUntilNextExDate(),
@@ -427,7 +427,7 @@ class BlazeDividendsByExDateLoaderNotInteractiveTestCase(
     def setUpClass(cls):
         super(BlazeDividendsByExDateLoaderNotInteractiveTestCase,
               cls).setUpClass()
-        cls.loader_type = DividendsByExDateLoader
+        cls.loader_type = BlazeDividendsByExDateLoader
 
     def loader_args(self, dates):
         (bound_expr,) = super(
