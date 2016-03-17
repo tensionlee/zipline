@@ -20,7 +20,6 @@ from zipline.testing import (
     ExplodingObject,
     gen_calendars,
     make_simple_equity_info,
-    num_days_in_range,
     tmp_asset_finder,
 )
 
@@ -160,15 +159,6 @@ class EventLoaderCommonMixin(object):
             start_date=pd.Timestamp('2013-01-01', tz='UTC'),
             end_date=pd.Timestamp('2015-01-01', tz='UTC'),
         )
-
-    def zip_with_floats(self, dates, flts):
-        return pd.Series(flts, index=dates).astype('float')
-
-    def num_days_between(self, dates, start_date, end_date):
-        return num_days_in_range(dates, start_date, end_date)
-
-    def zip_with_dates(self, index_dates, dts):
-        return pd.Series(pd.to_datetime(dts), index=index_dates)
 
     def loader_args(self, dates):
         """Construct the base  object to pass to the loader.

@@ -169,10 +169,10 @@ def get_values_for_date_ranges(zip_vals_dates,
 
 
 def get_vals_for_dates(zip_with_floats_dates,
-                                   num_days_between_dates,
-                                   dates,
-                                   date_invervals,
-                                   vals):
+                       num_days_between_dates,
+                       dates,
+                       date_invervals,
+                       vals):
     return pd.DataFrame({
             0: get_values_for_date_ranges(zip_with_floats_dates,
                                           num_days_between_dates,

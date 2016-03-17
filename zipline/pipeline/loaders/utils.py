@@ -1,9 +1,11 @@
 import datetime
+import itertools
 
 import numpy as np
 import pandas as pd
 from six import iteritems
 from six.moves import zip
+from zipline.testing import num_days_in_range
 
 from zipline.utils.numpy_utils import NaTns
 
@@ -274,3 +276,39 @@ def check_data_query_args(data_query_time, data_query_tz):
                 data_query_tz,
             ),
         )
+
+
+def zip_with_floats(dates, flts):
+        return pd.Series(flts, index=dates).astype('float')
+
+
+def num_days_between(dates, start_date, end_date):
+    return num_days_in_range(dates, start_date, end_date)
+
+
+def zip_with_dates(index_dates, dts):
+    return pd.Series(pd.to_datetime(dts), index=index_dates)
+
+
+def get_values_for_date_ranges(zip_date_index_with_vals,
+                               vals_for_date_intervals,
+                               date_intervals,
+                               date_index):
+    """
+    Returns a
+    :param zip_vals_for_date_index:
+    :param num_days_between_dates:
+    :param vals_for_date_intervals:
+    :param date_intervals:
+    :return:
+    """
+    # Fill in given values for given date ranges.
+    return zip_date_index_with_vals(
+        date_index,
+        list(
+            itertools.chain(*[
+                [val] * num_days_between(date_index, *date_intervals[i])
+                for i, val in enumerate(vals_for_date_intervals)
+            ])
+        ),
+    )
