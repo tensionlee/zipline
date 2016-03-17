@@ -200,11 +200,6 @@ class DividendsByAnnouncementDateTestCase(TestCase, EventLoaderCommonMixin):
     @classmethod
     def setUpClass(cls):
         cls._cleanup_stack = stack = ExitStack()
-        equity_info = make_simple_equity_info(
-            cls.get_sids(),
-            start_date=pd.Timestamp('2013-01-01', tz='UTC'),
-            end_date=pd.Timestamp('2015-01-01', tz='UTC'),
-        )
         cls.cols = {}
         cls.dataset = {sid:
                        frame.drop([EX_DATE_FIELD_NAME,
@@ -212,7 +207,7 @@ class DividendsByAnnouncementDateTestCase(TestCase, EventLoaderCommonMixin):
                        for sid, frame
                        in enumerate(dividends_cases)}
         cls.finder = stack.enter_context(
-            tmp_asset_finder(equities=equity_info),
+            tmp_asset_finder(equities=cls.get_equity_info()),
         )
 
         cls.loader_type = DividendsByAnnouncementDateLoader
