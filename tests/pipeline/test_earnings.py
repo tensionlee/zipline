@@ -32,6 +32,8 @@ from zipline.pipeline.loaders.blaze import (
 from zipline.utils.test_utils import (
     tmp_asset_finder,
 )
+from zipline.pipeline.loaders.utils import get_values_for_date_ranges, \
+    zip_with_dates
 
 from zipline.testing import tmp_asset_finder
 
@@ -63,6 +65,58 @@ earnings_cases = [
     ),
 ]
 
+next_date_intervals = [
+    [[None, '2014-01-04'],
+     ['2014-01-05', '2014-01-15'],
+     ['2014-01-16', '2014-01-20'],
+     ['2014-01-21', None]],
+    [[None, '2014-01-04'],
+     ['2014-01-05', '2014-01-09'],
+     ['2014-01-10', '2014-01-15'],
+     ['2014-01-16', '2014-01-20'],
+     ['2014-01-21', None]],
+    [[None, '2014-01-04'],
+     ['2014-01-05', '2014-01-10'],
+     ['2014-01-11', '2014-01-14'],
+     ['2014-01-15', '2014-01-20'],
+     ['2014-01-21', None]],
+    [[None, '2014-01-04'],
+     ['2014-01-05', '2014-01-10'],
+     ['2014-01-11', '2014-01-15'],
+     ['2014-01-16', None]]
+]
+
+next_dates = [
+    ['NaT', '2014-01-15', '2014-01-20', 'NaT'],
+    ['NaT', '2014-01-20', '2014-01-15', '2014-01-20', 'NaT'],
+    ['NaT', '2014-01-10', 'NaT', '2014-01-20', 'NaT'],
+    ['NaT', '2014-01-10', '2014-01-15', 'NaT'],
+    ['NaT']
+]
+
+prev_date_intervals = [
+    [[None, '2014-01-14'],
+     ['2014-01-15', '2014-01-19'],
+     ['2014-01-20', None]],
+    [[None, '2014-01-14'],
+     ['2014-01-15', '2014-01-19'],
+     ['2014-01-20', None]],
+    [[None, '2014-01-09'],
+     ['2014-01-10', '2014-01-19'],
+     ['2014-01-20', None]],
+    [[None, '2014-01-09'],
+     ['2014-01-10', '2014-01-14'],
+     ['2014-01-15', None]]
+]
+
+prev_dates = [
+    ['NaT', '2014-01-15', '2014-01-20'],
+    ['NaT', '2014-01-15', '2014-01-20'],
+    ['NaT', '2014-01-10', '2014-01-20'],
+    ['NaT', '2014-01-10', '2014-01-15'],
+    ['NaT']
+]
+
 
 class EarningsCalendarLoaderTestCase(TestCase, EventLoaderCommonMixin):
     """
@@ -91,90 +145,45 @@ class EarningsCalendarLoaderTestCase(TestCase, EventLoaderCommonMixin):
         cls.loader_type = EarningsCalendarLoader
 
     def get_expected_next_event_dates(self, dates):
-        num_days_between_for_dates = partial(self.num_days_between, dates)
-        zip_with_dates_for_dates = partial(self.zip_with_dates, dates)
         return pd.DataFrame({
-            0: zip_with_dates_for_dates(
-                ['NaT'] *
-                num_days_between_for_dates(None, '2014-01-04') +
-                ['2014-01-15'] *
-                num_days_between_for_dates('2014-01-05', '2014-01-15') +
-                ['2014-01-20'] *
-                num_days_between_for_dates('2014-01-16', '2014-01-20') +
-                ['NaT'] *
-                num_days_between_for_dates('2014-01-21', None)
-            ),
-            1: zip_with_dates_for_dates(
-                ['NaT'] *
-                num_days_between_for_dates(None, '2014-01-04') +
-                ['2014-01-20'] *
-                num_days_between_for_dates('2014-01-05', '2014-01-09') +
-                ['2014-01-15'] *
-                num_days_between_for_dates('2014-01-10', '2014-01-15') +
-                ['2014-01-20'] *
-                num_days_between_for_dates('2014-01-16', '2014-01-20') +
-                ['NaT'] *
-                num_days_between_for_dates('2014-01-21', None)
-            ),
-            2: zip_with_dates_for_dates(
-                ['NaT'] *
-                num_days_between_for_dates(None, '2014-01-04') +
-                ['2014-01-10'] *
-                num_days_between_for_dates('2014-01-05', '2014-01-10') +
-                ['NaT'] *
-                num_days_between_for_dates('2014-01-11', '2014-01-14') +
-                ['2014-01-20'] *
-                num_days_between_for_dates('2014-01-15', '2014-01-20') +
-                ['NaT'] *
-                num_days_between_for_dates('2014-01-21', None)
-            ),
-            3: zip_with_dates_for_dates(
-                ['NaT'] *
-                num_days_between_for_dates(None, '2014-01-04') +
-                ['2014-01-10'] *
-                num_days_between_for_dates('2014-01-05', '2014-01-10') +
-                ['2014-01-15'] *
-                num_days_between_for_dates('2014-01-11', '2014-01-15') +
-                ['NaT'] *
-                num_days_between_for_dates('2014-01-16', None)
-            ),
-            4: zip_with_dates_for_dates(['NaT'] *
-                                        len(dates)),
+            0: get_values_for_date_ranges(zip_with_dates,
+                                          next_dates[0],
+                                          next_date_intervals[0],
+                                          dates),
+            1: get_values_for_date_ranges(zip_with_dates,
+                                          next_dates[1],
+                                          next_date_intervals[1],
+                                          dates),
+            2: get_values_for_date_ranges(zip_with_dates,
+                                          next_dates[2],
+                                          next_date_intervals[2],
+                                          dates),
+            3: get_values_for_date_ranges(zip_with_dates,
+                                          next_dates[3],
+                                          next_date_intervals[3],
+                                          dates),
+            4: zip_with_dates(dates, ['NaT'] * len(dates)),
         }, index=dates)
 
     def get_expected_previous_event_dates(self, dates):
-        num_days_between_for_dates = partial(self.num_days_between, dates)
-        zip_with_dates_for_dates = partial(self.zip_with_dates, dates)
         return pd.DataFrame({
-            0: zip_with_dates_for_dates(
-                ['NaT'] * num_days_between_for_dates(None, '2014-01-14') +
-                ['2014-01-15'] * num_days_between_for_dates('2014-01-15',
-                                                            '2014-01-19') +
-                ['2014-01-20'] * num_days_between_for_dates('2014-01-20',
-                                                            None),
-            ),
-            1: zip_with_dates_for_dates(
-                ['NaT'] * num_days_between_for_dates(None, '2014-01-14') +
-                ['2014-01-15'] * num_days_between_for_dates('2014-01-15',
-                                                            '2014-01-19') +
-                ['2014-01-20'] * num_days_between_for_dates('2014-01-20',
-                                                            None),
-            ),
-            2: zip_with_dates_for_dates(
-                ['NaT'] * num_days_between_for_dates(None, '2014-01-09') +
-                ['2014-01-10'] * num_days_between_for_dates('2014-01-10',
-                                                            '2014-01-19') +
-                ['2014-01-20'] * num_days_between_for_dates('2014-01-20',
-                                                            None),
-            ),
-            3: zip_with_dates_for_dates(
-                ['NaT'] * num_days_between_for_dates(None, '2014-01-09') +
-                ['2014-01-10'] * num_days_between_for_dates('2014-01-10',
-                                                            '2014-01-14') +
-                ['2014-01-15'] * num_days_between_for_dates('2014-01-15',
-                                                            None),
-            ),
-            4: zip_with_dates_for_dates(['NaT'] * len(dates)),
+            0: get_values_for_date_ranges(zip_with_dates,
+                                          prev_dates[0],
+                                          prev_date_intervals[0],
+                                          dates),
+            1: get_values_for_date_ranges(zip_with_dates,
+                                          prev_dates[1],
+                                          prev_date_intervals[1],
+                                          dates),
+            2: get_values_for_date_ranges(zip_with_dates,
+                                          prev_dates[2],
+                                          prev_date_intervals[2],
+                                          dates),
+            3: get_values_for_date_ranges(zip_with_dates,
+                                          prev_dates[3],
+                                          prev_date_intervals[3],
+                                          dates),
+            4: zip_with_dates(dates, ['NaT'] * len(dates)),
         }, index=dates)
 
     @classmethod
