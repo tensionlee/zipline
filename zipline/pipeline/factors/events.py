@@ -3,6 +3,7 @@ Factors describing information about event data (e.g. earnings
 announcements, acquisitions, dividends, etc.).
 """
 from numpy import newaxis
+from zipline.pipeline.data._13_d_filings import _13DFilings
 from zipline.pipeline.data.buyback_auth import (
     CashBuybackAuthorizations,
     ShareBuybackAuthorizations
@@ -205,3 +206,14 @@ class BusinessDaysSincePreviousExDate(
     zipline.pipeline.factors.BusinessDaysSinceDividendAnnouncement
     """
     inputs = [DividendsByExDate.previous_ex_date]
+
+
+class BusinessDaysSince13DFilingsDate(
+    BusinessDaysSincePreviousEvents
+):
+    """
+    Factor returning the number of **business days** (not trading days!) since
+    the most recent 13d filings for each asset.
+
+    """
+    inputs = [_13DFilings.disclosure_date]

@@ -3,7 +3,7 @@ from zipline.pipeline.common import (
     PAY_DATE_FIELD_NAME,
     CASH_AMOUNT_FIELD_NAME,
     ANNOUNCEMENT_FIELD_NAME,
-    DISCLOSURE_DATE, PERCENTAGE, NUM_SHARES)
+    DISCLOSURE_DATE, PERCENT_SHARES, NUM_SHARES)
 from zipline.pipeline.loaders.events import EventsLoader
 from zipline.pipeline.data.dividends import (
     DividendsByExDate,
@@ -15,7 +15,7 @@ from zipline.utils.memoize import lazyval
 
 class _13DFilingsLoader(EventsLoader):
     expected_cols = frozenset([DISCLOSURE_DATE,
-                               PERCENTAGE,
+                               PERCENT_SHARES,
                                NUM_SHARES])
 
     def __init__(self, all_dates, events_by_sid,
@@ -26,24 +26,24 @@ class _13DFilingsLoader(EventsLoader):
         )
 
     @lazyval
-    def previous_disclosure_date_loader(self):
+    def disclosure_date_loader(self):
         return self._previous_event_date_loader(
-            self.dataset.previous_disclosure_date,
+            self.dataset.disclosure_date,
             DISCLOSURE_DATE
         )
 
     @lazyval
-    def previous_percentage_loader(self):
+    def percent_shares_loader(self):
         return self._previous_event_value_loader(
-            self.dataset.previous_percentage,
+            self.dataset.percent_shares,
             DISCLOSURE_DATE,
-            PERCENTAGE
+            PERCENT_SHARES
         )
 
     @lazyval
-    def previous_number_shares_loader(self):
+    def number_shares_loader(self):
         return self._previous_event_value_loader(
-            self.dataset.previous_number_shares,
+            self.dataset.number_shares,
             DISCLOSURE_DATE,
             NUM_SHARES
         )

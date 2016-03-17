@@ -7,6 +7,6 @@ from .dataset import Column, DataSet
 
 
 class _13DFilings(DataSet):
-    previous_number_shares = Column(float64_dtype)
-    previous_percentage = Column(float64_dtype)
-    previous_disclosure_date = Column(datetime64ns_dtype)
+    number_shares = Column(float64_dtype)
+    percent_shares = Column(float64_dtype)
+    disclosure_date = Column(datetime64ns_dtype)

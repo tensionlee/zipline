@@ -5,7 +5,7 @@ from zipline.pipeline.common import (
     PAY_DATE_FIELD_NAME,
     SID_FIELD_NAME,
     TS_FIELD_NAME,
-    PERCENTAGE, NUM_SHARES, DISCLOSURE_DATE)
+    PERCENT_SHARES, NUM_SHARES, DISCLOSURE_DATE)
 from zipline.pipeline.data._13_d_filings import _13DFilings
 from zipline.pipeline.data.dividends import DividendsByExDate, \
     DividendsByAnnouncementDate, DividendsByPayDate
@@ -57,7 +57,7 @@ class Blaze_13DFilingsLoader(BlazeEventsLoader):
     __doc__ = __doc__.format(
         TS_FIELD_NAME=TS_FIELD_NAME,
         SID_FIELD_NAME=SID_FIELD_NAME,
-        PERCENTAGE=PERCENTAGE,
+        PERCENTAGE=PERCENT_SHARES,
         NUM_SHARES=NUM_SHARES,
         DISCLOSURE_DATE=DISCLOSURE_DATE
     )
@@ -65,7 +65,7 @@ class Blaze_13DFilingsLoader(BlazeEventsLoader):
     _expected_fields = frozenset({
         TS_FIELD_NAME,
         SID_FIELD_NAME,
-        PERCENTAGE,
+        PERCENT_SHARES,
         NUM_SHARES,
         DISCLOSURE_DATE
     })
