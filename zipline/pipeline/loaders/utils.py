@@ -48,9 +48,8 @@ def next_event_frame(events_by_sid,
         equity: np.full_like(dates, NaTns) for equity in events_by_sid
     }
     value_cols = {
-        equity: np.full(len(dates), missing_value, dtype=field_dtype) for equity
-        in
-        events_by_sid
+        equity: np.full(len(dates), missing_value, dtype=field_dtype)
+        for equity in events_by_sid
     }
 
     raw_dates = dates.values
