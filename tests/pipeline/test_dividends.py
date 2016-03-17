@@ -38,7 +38,8 @@ from zipline.pipeline.factors.events import (
     BusinessDaysUntilNextExDate
 )
 from zipline.pipeline.loaders.blaze.dividends import \
-    BlazeDividendsByAnnouncementDateLoader, BlazeDividendsByPayDateLoader
+    BlazeDividendsByAnnouncementDateLoader, BlazeDividendsByPayDateLoader, \
+    BlazeDividendsByExDateLoader
 from zipline.pipeline.loaders.dividends import DividendsByAnnouncementDateLoader, \
     DividendsByExDateLoader, DividendsByPayDateLoader
 from zipline.utils.test_utils import (
@@ -89,6 +90,67 @@ dividends_cases = [
         dtype='datetime64[ns]'
     ),
 ]
+
+prev_date_intervals = [
+            [
+                [None, '2014-01-14'], ['2014-01-15', '2014-01-19'],
+                ['2014-01-20', None]
+            ],
+            [
+                [None, '2014-01-14'], ['2014-01-15', '2014-01-19'],
+                ['2014-01-20', None]
+            ],
+            [
+               [None, '2014-01-09'], ['2014-01-10', '2014-01-19'],
+               ['2014-01-20', None]
+            ],
+            [
+               [None, '2014-01-09'], ['2014-01-10', '2014-01-14'],
+               ['2014-01-15', None]
+            ]
+        ]
+
+next_date_intervals = [
+    [
+        [None, '2014-01-04'], ['2014-01-05', '2014-01-15'],
+        ['2014-01-16', '2014-01-20'], ['2014-01-21', None]
+    ],
+    [
+        [None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
+        ['2014-01-10', '2014-01-15'], ['2014-01-16', '2014-01-20'],
+        ['2014-01-21', None]
+    ],
+    [
+        [None, '2014-01-04'], ['2014-01-05', '2014-01-10'],
+        ['2014-01-11', '2014-01-14'], ['2014-01-15', '2014-01-20'],
+        ['2014-01-21', None]
+    ],
+    [
+        [None, '2014-01-04'], ['2014-01-05', '2014-01-10'],
+        ['2014-01-11', '2014-01-15'], ['2014-01-16', None]
+    ]
+]
+
+next_ex_and_pay_dates = [['NaT', '2014-01-15', '2014-01-20', 'NaT'],
+                         ['NaT', '2014-01-20', '2014-01-15', '2014-01-20',
+                          'NaT'],
+                         ['NaT', '2014-01-10', 'NaT', '2014-01-20', 'NaT'],
+                         ['NaT', '2014-01-10', '2014-01-15', 'NaT']]
+
+prev_ex_and_pay_dates = [['NaT', '2014-01-15', '2014-01-20'],
+                           ['NaT', '2014-01-15', '2014-01-20'],
+                           ['NaT', '2014-01-10', '2014-01-20'],
+                           ['NaT', '2014-01-10', '2014-01-15']]
+
+prev_amounts = [['NaN', 1, 15],
+                ['NaN', 13, 7],
+                ['NaN', 3, 1],
+                ['NaN', 6, 23]]
+
+next_amounts = [['NaN', 1, 15, 'NaN'],
+                ['NaN', 7, 13, 7, 'NaN'],
+                ['NaN', 3, 'NaN', 1, 'NaN'],
+                ['NaN', 6, 23, 'NaN']]
 
 
 def get_values_for_date_ranges(zip_vals_dates,
@@ -306,80 +368,21 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
         num_days_between_for_dates = partial(self.num_days_between, dates)
         zip_with_dates_for_dates = partial(self.zip_with_dates, dates)
 
-        prev_date_intervals = [
-            [
-                [None, '2014-01-14'], ['2014-01-15', '2014-01-19'],
-                ['2014-01-20', None]
-            ],
-            [
-                [None, '2014-01-14'], ['2014-01-15', '2014-01-19'],
-                ['2014-01-20', None]
-            ],
-            [
-               [None, '2014-01-09'], ['2014-01-10', '2014-01-19'],
-               ['2014-01-20', None]
-            ],
-            [
-               [None, '2014-01-09'], ['2014-01-10', '2014-01-14'],
-               ['2014-01-15', None]
-            ]
-        ]
-
-        next_date_intervals = [
-            [
-                [None, '2014-01-04'], ['2014-01-05', '2014-01-14'],
-                ['2014-01-15', '2014-01-19'], ['2014-01-20', None]
-            ],
-            [
-                [None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
-                ['2014-01-10', '2014-01-15'], ['2014-01-16', '2014-01-20'],
-                ['2014-01-21', None]
-            ],
-            [
-                [None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
-                ['2014-01-10', '2014-01-14'], ['2014-01-15', '2014-01-19'],
-                ['2014-01-20', None]
-            ],
-            [
-                [None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
-                ['2014-01-10', '2014-01-14'], ['2014-01-15', None]
-            ]
-        ]
-
-        next_announcement_dates = [['NaT', '2014-01-15', '2014-01-20',
-                                           'NaT'],
-                                   ['NaT', '2014-01-20', '2014-01-15',
-                                           '2014-01-20', 'NaT'],
-                                   ['NaT', '2014-01-10', '2014-01-14',
-                                           '2014-01-20', 'NaT'],
-                                   ['NaT', '2014-01-10', '2014-01-15',
-                                           'NaT']]
         self.cols[NEXT_EX_DATE] = get_vals_for_dates(
             zip_with_dates_for_dates, num_days_between_for_dates, dates,
-            next_date_intervals, next_announcement_dates
-        )
-        prev_announcement_dates = [['NaT', '2014-01-15', '2014-01-20'],
-                                   ['NaT', '2014-01-15', '2014-01-20'],
-                                   ['NaT', '2014-01-10', '2014-01-20'],
-                                   ['NaT', '2014-01-10', '2014-01-15']]
-        self.cols[PREVIOUS_EX_DATE] = get_vals_for_dates(
-            zip_with_dates_for_dates, num_days_between_for_dates, dates,
-            prev_date_intervals, prev_announcement_dates
+            next_date_intervals, next_ex_and_pay_dates
         )
 
-        next_amounts = [['NaN', 1, 15, 'NaN'],
-                        ['NaN', 7, 13, 7, 'NaN'],
-                        ['NaN', 3, 'NaN', 1, 'NaN'],
-                        ['NaN', 6, 23, 'NaN']]
+        self.cols[PREVIOUS_EX_DATE] = get_vals_for_dates(
+            zip_with_dates_for_dates, num_days_between_for_dates, dates,
+            prev_date_intervals, prev_ex_and_pay_dates
+        )
+
         self.cols[NEXT_AMOUNT] = get_vals_for_dates(
             zip_with_floats_dates, num_days_between_dates,
             dates, next_date_intervals, next_amounts
         )
 
-        prev_amounts = [['NaN', 1, 15],
-                        ['NaN', 13, 7],
-                        ['NaN', 3, 1],
-                        ['NaN', 6, 23]]
         self.cols[PREVIOUS_AMOUNT] = get_vals_for_dates(
             zip_with_floats_dates, num_days_between_dates,
             dates, prev_date_intervals, prev_amounts
@@ -398,7 +401,7 @@ class BlazeDividendsByExDateLoaderTestCase(DividendsByExDateTestCase):
     @classmethod
     def setUpClass(cls):
         super(BlazeDividendsByExDateLoaderTestCase, cls).setUpClass()
-        cls.loader_type = DividendsByExDateLoader
+        cls.loader_type = BlazeDividendsByExDateLoader
 
     def loader_args(self, dates):
         _, mapping = super(
@@ -476,66 +479,34 @@ class DividendsByPayDateTestCase(TestCase, EventLoaderCommonMixin):
     def setup(self, dates):
         zip_with_floats_dates = partial(self.zip_with_floats, dates)
         num_days_between_dates = partial(self.num_days_between, dates)
-        self.cols[NEXT_PAY_DATE] = self.get_expected_next_event_dates(dates)
-        self.cols[
-            PREVIOUS_PAY_DATE
-        ] = self.get_expected_previous_event_dates(dates)
-        # TODO: fix amounts for next/previous to correct ones
-        _expected_next_amount = pd.DataFrame({
-            0: zip_with_floats_dates(
-                ['NaN'] * num_days_between_dates(None, '2014-01-14') +
-                [1] * num_days_between_dates('2014-01-15', '2014-01-19') +
-                [15] * num_days_between_dates('2014-01-20', None)
-            ),
-            1: zip_with_floats_dates(
-                ['NaN'] * num_days_between_dates(None, '2014-01-14') +
-                [13] * num_days_between_dates('2014-01-15', '2014-01-19') +
-                [7] * num_days_between_dates('2014-01-20', None)
-            ),
-            2: zip_with_floats_dates(
-                ['NaN'] * num_days_between_dates(None, '2014-01-09') +
-                [3] * num_days_between_dates('2014-01-10', '2014-01-19') +
-                [1] * num_days_between_dates('2014-01-20', None)
-            ),
-            3: zip_with_floats_dates(
-                ['NaN'] * num_days_between_dates(None, '2014-01-09') +
-                [6] * num_days_between_dates('2014-01-10', '2014-01-14') +
-                [23] * num_days_between_dates('2014-01-15', None)
-            ),
-            4: zip_with_floats_dates(['NaN'] * len(dates)),
-        }, index=dates)
-        self.cols[NEXT_AMOUNT] = _expected_next_amount
-        _expected_previous_amount = pd.DataFrame({
-            0: zip_with_floats_dates(
-                ['NaN'] * num_days_between_dates(None, '2014-01-14') +
-                [1] * num_days_between_dates('2014-01-15', '2014-01-19') +
-                [15] * num_days_between_dates('2014-01-20', None)
-            ),
-            1: zip_with_floats_dates(
-                ['NaN'] * num_days_between_dates(None, '2014-01-14') +
-                [13] * num_days_between_dates('2014-01-15', '2014-01-19') +
-                [7] * num_days_between_dates('2014-01-20', None)
-            ),
-            2: zip_with_floats_dates(
-                ['NaN'] * num_days_between_dates(None, '2014-01-09') +
-                [3] * num_days_between_dates('2014-01-10', '2014-01-19') +
-                [1] * num_days_between_dates('2014-01-20', None)
-            ),
-            3: zip_with_floats_dates(
-                ['NaN'] * num_days_between_dates(None, '2014-01-09') +
-                [6] * num_days_between_dates('2014-01-10', '2014-01-14') +
-                [23] * num_days_between_dates('2014-01-15', None)
-            ),
-            4: zip_with_floats_dates(['NaN'] * len(dates)),
-        }, index=dates)
-        self.cols[PREVIOUS_AMOUNT] = _expected_previous_amount
+        num_days_between_for_dates = partial(self.num_days_between, dates)
+        zip_with_dates_for_dates = partial(self.zip_with_dates, dates)
+
+        self.cols[NEXT_PAY_DATE] = get_vals_for_dates(
+            zip_with_dates_for_dates, num_days_between_for_dates, dates,
+            next_date_intervals, next_ex_and_pay_dates
+        )
+        self.cols[PREVIOUS_PAY_DATE] = get_vals_for_dates(
+            zip_with_dates_for_dates, num_days_between_for_dates, dates,
+            prev_date_intervals, prev_ex_and_pay_dates
+        )
+
+        self.cols[NEXT_AMOUNT] = get_vals_for_dates(
+            zip_with_floats_dates, num_days_between_dates,
+            dates, next_date_intervals, next_amounts
+        )
+
+        self.cols[PREVIOUS_AMOUNT] = get_vals_for_dates(
+            zip_with_floats_dates, num_days_between_dates,
+            dates, prev_date_intervals, prev_amounts
+        )
 
 
 class BlazeDividendsByPayDateLoaderTestCase(DividendsByPayDateTestCase):
     @classmethod
     def setUpClass(cls):
         super(BlazeDividendsByPayDateLoaderTestCase, cls).setUpClass()
-        cls.loader_type = DividendsByPayDateLoader
+        cls.loader_type = BlazeDividendsByPayDateLoader
 
     def loader_args(self, dates):
         _, mapping = super(

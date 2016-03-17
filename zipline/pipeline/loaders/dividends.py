@@ -41,7 +41,7 @@ class DividendsByAnnouncementDateLoader(EventsLoader):
 
 
 class DividendsByPayDateLoader(EventsLoader):
-    expected_cols = frozenset([EX_DATE_FIELD_NAME,
+    expected_cols = frozenset([PAY_DATE_FIELD_NAME,
                                CASH_AMOUNT_FIELD_NAME])
 
     def __init__(self, all_dates, events_by_sid,
@@ -65,14 +65,14 @@ class DividendsByPayDateLoader(EventsLoader):
 
     @lazyval
     def next_amount_loader(self):
-        return self._next_event_value_loader(self.dataset.next_amount_date,
+        return self._next_event_value_loader(self.dataset.next_amount,
                                              PAY_DATE_FIELD_NAME,
                                              CASH_AMOUNT_FIELD_NAME)
 
     @lazyval
     def previous_amount_loader(self):
         return self._previous_event_value_loader(
-            self.dataset.previous_amount_date,
+            self.dataset.previous_amount,
             PAY_DATE_FIELD_NAME,
             CASH_AMOUNT_FIELD_NAME
         )

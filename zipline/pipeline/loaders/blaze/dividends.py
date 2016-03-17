@@ -8,7 +8,8 @@ from zipline.pipeline.common import (
 )
 from zipline.pipeline.data.dividends import DividendsByExDate, \
     DividendsByAnnouncementDate, DividendsByPayDate
-from zipline.pipeline.loaders.dividends import DividendsByAnnouncementDateLoader
+from zipline.pipeline.loaders.dividends import DividendsByAnnouncementDateLoader, \
+    DividendsByPayDateLoader, DividendsByExDateLoader
 from .events import BlazeEventsLoader
 
 
@@ -134,7 +135,7 @@ class BlazeDividendsByExDateLoader(BlazeEventsLoader):
         CASH_AMOUNT_FIELD_NAME,
     })
 
-    concrete_loader = DividendsByAnnouncementDateLoader
+    concrete_loader = DividendsByExDateLoader
 
     def __init__(self,
                  expr,
@@ -204,7 +205,7 @@ class BlazeDividendsByPayDateLoader(BlazeEventsLoader):
         CASH_AMOUNT_FIELD_NAME,
     })
 
-    concrete_loader = DividendsByAnnouncementDateLoader
+    concrete_loader = DividendsByPayDateLoader
 
     def __init__(self,
                  expr,
