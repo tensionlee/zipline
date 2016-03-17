@@ -1,7 +1,6 @@
 """
 Tests for the reference loader for EarningsCalendar.
 """
-from functools import partial
 from unittest import TestCase
 
 import blaze as bz
@@ -26,14 +25,11 @@ from zipline.pipeline.factors.events import (
     BusinessDaysUntilNextEarnings,
 )
 from zipline.pipeline.loaders.earnings import EarningsCalendarLoader
-from zipline.pipeline.loaders.blaze import (
-    BlazeEarningsCalendarLoader,
-)
-from zipline.utils.test_utils import (
-    tmp_asset_finder,
-)
-from zipline.pipeline.loaders.utils import get_values_for_date_ranges, \
+from zipline.pipeline.loaders.blaze import BlazeEarningsCalendarLoader
+from zipline.pipeline.loaders.utils import (
+    get_values_for_date_ranges,
     zip_with_dates
+)
 
 from zipline.testing import tmp_asset_finder
 

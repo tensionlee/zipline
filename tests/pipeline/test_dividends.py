@@ -1,13 +1,11 @@
 """
 Tests for the reference loader for Dividends datasets.
 """
-from functools import partial
 from unittest import TestCase
 
 import blaze as bz
 from blaze.compute.core import swap_resources_into_scope
 from contextlib2 import ExitStack
-import itertools
 import pandas as pd
 from six import iteritems
 from tests.pipeline.base import EventLoaderCommonMixin
