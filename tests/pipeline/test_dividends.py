@@ -28,24 +28,32 @@ from zipline.pipeline.common import (
     EX_DATE_FIELD_NAME,
     PAY_DATE_FIELD_NAME
 )
-from zipline.pipeline.data.dividends import DividendsByAnnouncementDate, \
-    DividendsByExDate, DividendsByPayDate
+from zipline.pipeline.data.dividends import (
+    DividendsByAnnouncementDate,
+    DividendsByExDate,
+    DividendsByPayDate
+)
 from zipline.pipeline.factors.events import (
     BusinessDaysSinceDividendAnnouncement,
     BusinessDaysSincePreviousExDate,
     BusinessDaysUntilNextExDate
 )
-from zipline.pipeline.loaders.blaze.dividends import \
-    BlazeDividendsByAnnouncementDateLoader, BlazeDividendsByPayDateLoader, \
+from zipline.pipeline.loaders.blaze.dividends import (
+    BlazeDividendsByAnnouncementDateLoader,
+    BlazeDividendsByPayDateLoader,
     BlazeDividendsByExDateLoader
-from zipline.pipeline.loaders.dividends import DividendsByAnnouncementDateLoader, \
-    DividendsByExDateLoader, DividendsByPayDateLoader
-from zipline.utils.test_utils import (
-    make_simple_equity_info,
-    tmp_asset_finder,
 )
-from zipline.pipeline.loaders.utils import get_values_for_date_ranges, \
-    zip_with_dates, zip_with_floats
+from zipline.pipeline.loaders.dividends import (
+    DividendsByAnnouncementDateLoader,
+    DividendsByExDateLoader,
+    DividendsByPayDateLoader
+)
+from zipline.testing import tmp_asset_finder
+from zipline.pipeline.loaders.utils import (
+    get_values_for_date_ranges,
+    zip_with_dates,
+    zip_with_floats
+)
 
 dividends_cases = [
     # K1--K2--A1--A2.
@@ -313,11 +321,7 @@ class DividendsByExDateTestCase(TestCase, EventLoaderCommonMixin):
     @classmethod
     def setUpClass(cls):
         cls._cleanup_stack = stack = ExitStack()
-        equity_info = make_simple_equity_info(
-            cls.get_sids(),
-            start_date=pd.Timestamp('2013-01-01', tz='UTC'),
-            end_date=pd.Timestamp('2015-01-01', tz='UTC'),
-        )
+        equity_info = cls.get_equity_info()
         cls.cols = {}
         cls.dataset = {sid:
                        frame.drop([ANNOUNCEMENT_FIELD_NAME,
@@ -418,11 +422,7 @@ class DividendsByPayDateTestCase(TestCase, EventLoaderCommonMixin):
     @classmethod
     def setUpClass(cls):
         cls._cleanup_stack = stack = ExitStack()
-        equity_info = make_simple_equity_info(
-            cls.get_sids(),
-            start_date=pd.Timestamp('2013-01-01', tz='UTC'),
-            end_date=pd.Timestamp('2015-01-01', tz='UTC'),
-        )
+        equity_info = cls.get_equity_info()
         cls.cols = {}
         cls.dataset = {sid:
                        frame.drop([ANNOUNCEMENT_FIELD_NAME,
