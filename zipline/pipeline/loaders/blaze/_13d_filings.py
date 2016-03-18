@@ -9,7 +9,7 @@ from zipline.pipeline.common import (
 from zipline.pipeline.data._13_d_filings import _13DFilings
 from zipline.pipeline.data.dividends import DividendsByExDate, \
     DividendsByAnnouncementDate, DividendsByPayDate
-from zipline.pipeline.loaders._13_df_filings import _13DFilingsLoader
+from zipline.pipeline.loaders._13_d_filings import _13DFilingsLoader
 from zipline.pipeline.loaders.dividends import DividendsByAnnouncementDateLoader, \
     DividendsByPayDateLoader, DividendsByExDateLoader
 from .events import BlazeEventsLoader

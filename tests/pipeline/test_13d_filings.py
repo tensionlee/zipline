@@ -19,7 +19,7 @@ from zipline.pipeline.common import(
 )
 from zipline.pipeline.data import _13DFilings
 from zipline.pipeline.factors.events import BusinessDaysSince13DFilingsDate
-from zipline.pipeline.loaders._13_df_filings import _13DFilingsLoader
+from zipline.pipeline.loaders._13_d_filings import _13DFilingsLoader
 
 from zipline.pipeline.loaders.utils import get_values_for_date_ranges, \
     zip_with_floats, zip_with_dates
