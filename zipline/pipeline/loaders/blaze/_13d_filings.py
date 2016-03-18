@@ -6,10 +6,10 @@ from zipline.pipeline.common import (
     SID_FIELD_NAME,
     TS_FIELD_NAME,
     PERCENT_SHARES, NUM_SHARES, DISCLOSURE_DATE)
-from zipline.pipeline.data._13_d_filings import _13DFilings
+from zipline.pipeline.data._13d_filings import _13DFilings
 from zipline.pipeline.data.dividends import DividendsByExDate, \
     DividendsByAnnouncementDate, DividendsByPayDate
-from zipline.pipeline.loaders._13_d_filings import _13DFilingsLoader
+from zipline.pipeline.loaders._13d_filings import _13DFilingsLoader
 from zipline.pipeline.loaders.dividends import DividendsByAnnouncementDateLoader, \
     DividendsByPayDateLoader, DividendsByExDateLoader
 from .events import BlazeEventsLoader
@@ -51,7 +51,7 @@ class Blaze_13DFilingsLoader(BlazeEventsLoader):
     date of the disclosure, the percentage, and the number of shares.
 
     If the '{TS_FIELD_NAME}' field is not included it is assumed that we
-    start the backtest with knowledge of all announcements.
+    start the backtest with knowledge of all disclosures.
     """
 
     __doc__ = __doc__.format(

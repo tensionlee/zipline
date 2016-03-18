@@ -3,7 +3,7 @@ Factors describing information about event data (e.g. earnings
 announcements, acquisitions, dividends, etc.).
 """
 from numpy import newaxis
-from zipline.pipeline.data._13_d_filings import _13DFilings
+from zipline.pipeline.data._13d_filings import _13DFilings
 from zipline.pipeline.data.buyback_auth import (
     CashBuybackAuthorizations,
     ShareBuybackAuthorizations

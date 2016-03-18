@@ -1,28 +1,30 @@
 """
-Tests for the reference loader for Buyback Authorizations.
+Tests for the reference loader for 13d filings.
 """
 from unittest import TestCase
 
 from contextlib2 import ExitStack
 import pandas as pd
-from .base import EventLoaderCommonMixin
 
+from .base import EventLoaderCommonMixin
 from zipline.pipeline.common import(
-    TS_FIELD_NAME,
+    DAYS_SINCE_PREV_DISCLOSURE,
+    DISCLOSURE_DATE,
     NUM_SHARES,
     PERCENT_SHARES,
-    DISCLOSURE_DATE,
     PREVIOUS_NUM_SHARES,
     PREVIOUS_PERCENT_SHARES,
-    DAYS_SINCE_PREV_DISCLOSURE,
-    PREVIOUS_DISCLOSURE_DATE
+    PREVIOUS_DISCLOSURE_DATE,
+    TS_FIELD_NAME,
 )
 from zipline.pipeline.data import _13DFilings
 from zipline.pipeline.factors.events import BusinessDaysSince13DFilingsDate
-from zipline.pipeline.loaders._13_d_filings import _13DFilingsLoader
-
-from zipline.pipeline.loaders.utils import get_values_for_date_ranges, \
-    zip_with_floats, zip_with_dates
+from zipline.pipeline.loaders._13d_filings import _13DFilingsLoader
+from zipline.pipeline.loaders.utils import (
+    get_values_for_date_ranges,
+    zip_with_floats,
+    zip_with_dates
+)
 from zipline.testing import tmp_asset_finder
 
 date_intervals = [[None, '2014-01-04'], ['2014-01-05', '2014-01-09'],

@@ -1,11 +1,26 @@
+"""
+Reference implementation for 13d filings loaders.
+"""
+
 from zipline.pipeline.common import (
-    DISCLOSURE_DATE, PERCENT_SHARES, NUM_SHARES)
+    DISCLOSURE_DATE,
+    PERCENT_SHARES,
+    NUM_SHARES
+)
+from zipline.pipeline.data._13d_filings import _13DFilings
 from zipline.pipeline.loaders.events import EventsLoader
-from zipline.pipeline.data._13_d_filings import _13DFilings
 from zipline.utils.memoize import lazyval
 
 
 class _13DFilingsLoader(EventsLoader):
+    """
+    Reference loader for
+    :class:`zipline.pipeline.data._13DFilings`.
+
+    events_by_sid: dict[sid -> pd.DataFrame(knowledge date,
+    disclosure date, percent shares, number of shares)]
+
+    """
     expected_cols = frozenset([DISCLOSURE_DATE,
                                PERCENT_SHARES,
                                NUM_SHARES])
