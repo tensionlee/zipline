@@ -1,15 +1,7 @@
 from zipline.pipeline.common import (
-    EX_DATE_FIELD_NAME,
-    PAY_DATE_FIELD_NAME,
-    CASH_AMOUNT_FIELD_NAME,
-    ANNOUNCEMENT_FIELD_NAME,
     DISCLOSURE_DATE, PERCENT_SHARES, NUM_SHARES)
 from zipline.pipeline.loaders.events import EventsLoader
-from zipline.pipeline.data.dividends import (
-    DividendsByExDate,
-    DividendsByAnnouncementDate,
-    DividendsByPayDate
-)
+from zipline.pipeline.data._13_d_filings import _13DFilings
 from zipline.utils.memoize import lazyval
 
 
@@ -20,7 +12,7 @@ class _13DFilingsLoader(EventsLoader):
 
     def __init__(self, all_dates, events_by_sid,
                  infer_timestamps=False,
-                 dataset=DividendsByAnnouncementDate):
+                 dataset=_13DFilings):
         super(_13DFilingsLoader, self).__init__(
             all_dates, events_by_sid, infer_timestamps, dataset=dataset,
         )
