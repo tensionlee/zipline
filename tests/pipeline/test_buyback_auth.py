@@ -5,7 +5,6 @@ import blaze as bz
 from blaze.compute.core import swap_resources_into_scope
 import pandas as pd
 from six import iteritems
-from .base import EventLoaderCommonMixin
 
 from zipline.pipeline.common import(
     BUYBACK_ANNOUNCEMENT_FIELD_NAME,
@@ -39,7 +38,9 @@ from zipline.pipeline.loaders.utils import (
     zip_with_floats,
     zip_with_dates
 )
-from zipline.testing.fixtures import WithAssetFinder, ZiplineTestCase
+from zipline.testing.fixtures import (
+    WithPipelineEventDataLoader, ZiplineTestCase
+)
 
 date_intervals = [[None, '2014-01-04'], ['2014-01-05', '2014-01-09'],
                   ['2014-01-10', None]]
@@ -74,8 +75,8 @@ def get_expected_previous_values(zip_date_index_with_vals,
     }, index=dates)
 
 
-class CashBuybackAuthLoaderTestCase(WithAssetFinder, ZiplineTestCase,
-                                    EventLoaderCommonMixin):
+class CashBuybackAuthLoaderTestCase(WithPipelineEventDataLoader,
+                                    ZiplineTestCase):
     """
     Test for cash buyback authorizations dataset.
     """
@@ -118,8 +119,8 @@ class CashBuybackAuthLoaderTestCase(WithAssetFinder, ZiplineTestCase,
         return cols
 
 
-class ShareBuybackAuthLoaderTestCase(WithAssetFinder, ZiplineTestCase,
-                                     EventLoaderCommonMixin):
+class ShareBuybackAuthLoaderTestCase(WithPipelineEventDataLoader,
+                                     ZiplineTestCase):
     """
     Test for share buyback authorizations dataset.
     """

@@ -5,7 +5,6 @@ import blaze as bz
 from blaze.compute.core import swap_resources_into_scope
 import pandas as pd
 from six import iteritems
-from .base import EventLoaderCommonMixin
 
 from zipline.pipeline.common import (
     ANNOUNCEMENT_FIELD_NAME,
@@ -28,7 +27,10 @@ from zipline.pipeline.loaders.utils import (
     zip_with_dates
 )
 
-from zipline.testing.fixtures import WithAssetFinder, ZiplineTestCase
+from zipline.testing.fixtures import (
+    WithPipelineEventDataLoader,
+    ZiplineTestCase
+)
 
 earnings_cases = [
     # K1--K2--A1--A2.
@@ -111,8 +113,8 @@ prev_dates = [
 ]
 
 
-class EarningsCalendarLoaderTestCase(WithAssetFinder, ZiplineTestCase,
-                                     EventLoaderCommonMixin):
+class EarningsCalendarLoaderTestCase(WithPipelineEventDataLoader,
+                                     ZiplineTestCase):
     """
     Tests for loading the earnings announcement data.
     """

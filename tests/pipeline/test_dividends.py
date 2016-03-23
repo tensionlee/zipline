@@ -5,7 +5,6 @@ import blaze as bz
 from blaze.compute.core import swap_resources_into_scope
 import pandas as pd
 from six import iteritems
-from tests.pipeline.base import EventLoaderCommonMixin
 
 from zipline.pipeline.common import (
     ANNOUNCEMENT_FIELD_NAME,
@@ -50,7 +49,10 @@ from zipline.pipeline.loaders.utils import (
     zip_with_dates,
     zip_with_floats
 )
-from zipline.testing.fixtures import WithAssetFinder, ZiplineTestCase
+from zipline.testing.fixtures import (
+    WithPipelineEventDataLoader,
+    ZiplineTestCase
+)
 
 dividends_cases = [
     # K1--K2--A1--A2.
@@ -184,8 +186,8 @@ def get_vals_for_dates(zip_date_index_with_vals,
     }, index=dates)
 
 
-class DividendsByAnnouncementDateTestCase(WithAssetFinder, ZiplineTestCase,
-                                          EventLoaderCommonMixin):
+class DividendsByAnnouncementDateTestCase(WithPipelineEventDataLoader,
+                                          ZiplineTestCase):
     """
     Tests for loading the dividends by announcement date data.
     """
@@ -283,8 +285,7 @@ class BlazeDividendsByAnnouncementDateNotInteractiveTestCase(
         return swap_resources_into_scope(bound_expr, {})
 
 
-class DividendsByExDateTestCase(WithAssetFinder, ZiplineTestCase,
-                                EventLoaderCommonMixin):
+class DividendsByExDateTestCase(WithPipelineEventDataLoader, ZiplineTestCase):
     """
     Tests for loading the dividends by ex date data.
     """
@@ -371,8 +372,7 @@ class BlazeDividendsByExDateLoaderNotInteractiveTestCase(
         return swap_resources_into_scope(bound_expr, {})
 
 
-class DividendsByPayDateTestCase(WithAssetFinder, ZiplineTestCase,
-                                 EventLoaderCommonMixin):
+class DividendsByPayDateTestCase(WithPipelineEventDataLoader, ZiplineTestCase):
     """
     Tests for loading the dividends by pay date data.
     """
