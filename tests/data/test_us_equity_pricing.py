@@ -42,6 +42,7 @@ from zipline.pipeline.data import USEquityPricing
 from zipline.utils.test_utils import (
     seconds_to_timestamp,
 )
+from zipline.utils.nyse_exchange_calendar import NYSEExchangeCalendar
 
 TEST_CALENDAR_START = Timestamp('2015-06-01', tz='UTC')
 TEST_CALENDAR_STOP = Timestamp('2015-06-30', tz='UTC')
@@ -78,11 +79,9 @@ class BcolzDailyBarTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        all_trading_days = TradingEnvironment().trading_days
-        cls.trading_days = all_trading_days[
-            all_trading_days.get_loc(TEST_CALENDAR_START):
-            all_trading_days.get_loc(TEST_CALENDAR_STOP) + 1
-        ]
+        cls.trading_days = NYSEExchangeCalendar().trading_days(
+            TEST_CALENDAR_START, TEST_CALENDAR_STOP
+        ).index
 
     def setUp(self):
 

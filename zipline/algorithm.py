@@ -97,6 +97,7 @@ from zipline.utils.math_utils import (
     round_if_near_integer
 )
 from zipline.utils.preprocess import preprocess
+from zipline.utils.trading_schedule import default_nyse_schedule
 
 import zipline.protocol
 from zipline.sources.requests_csv import PandasRequestsCSV
@@ -206,6 +207,12 @@ class TradingAlgorithm(object):
             futures_data=kwargs.pop('futures_metadata', {}),
         )
 
+        # If a schedule has been provided, pop it. Otherwise, use NYSE.
+        self.trading_schedule = kwargs.pop(
+            'trading_schedule',
+            default_nyse_schedule,
+        )
+
         # set the capital base
         self.capital_base = kwargs.pop('capital_base', DEFAULT_CAPITAL_BASE)
         self.sim_params = kwargs.pop('sim_params', None)
@@ -214,10 +221,12 @@ class TradingAlgorithm(object):
                 capital_base=self.capital_base,
                 start=kwargs.pop('start', None),
                 end=kwargs.pop('end', None),
-                env=self.trading_environment,
+                trading_schedule=self.trading_schedule,
             )
         else:
-            self.sim_params.update_internal_from_env(self.trading_environment)
+            self.sim_params.update_internal_from_trading_schedule(
+                self.trading_schedule
+            )
 
         self.perf_tracker = None
         # Pull in the environment's new AssetFinder for quick reference
@@ -323,7 +332,7 @@ class TradingAlgorithm(object):
         if get_loader is not None:
             self.engine = SimplePipelineEngine(
                 get_loader,
-                self.trading_environment.trading_days,
+                self.trading_schedule.schedule.index,
                 self.asset_finder,
             )
         else:
@@ -428,8 +437,9 @@ class TradingAlgorithm(object):
             # None so that it will be overwritten here.
             self.perf_tracker = PerformanceTracker(
                 sim_params=self.sim_params,
+                trading_schedule=self.trading_schedule,
                 env=self.trading_environment,
-                data_portal=self.data_portal
+                data_portal=self.data_portal,
             )
 
             # Set the dt initially to the period start by forcing it to change.
@@ -1359,7 +1369,7 @@ class TradingAlgorithm(object):
         --------
         PipelineEngine.run_pipeline
         """
-        days = self.trading_environment.trading_days
+        days = self.trading_schedule.all_trading_dates
 
         # Load data starting from the previous trading day...
         start_date_loc = days.get_loc(start_date)

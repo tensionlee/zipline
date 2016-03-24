@@ -24,7 +24,7 @@ from sqlalchemy import create_engine
 
 from zipline.data.loader import load_market_data
 # from zipline.utils import tradingcalendar
-from zipline.utils.nyse_exchange_calendar import NYSEExchangeCalendar
+from zipline.utils.trading_schedule import NYSETradingSchedule
 from zipline.assets import AssetFinder
 from zipline.assets.asset_writer import (
     AssetDBWriterFromList,
@@ -37,6 +37,7 @@ from zipline.errors import (
 
 log = logbook.Logger('Trading')
 
+default_nyse_schedule = NYSETradingSchedule()
 
 # The financial simulations in zipline depend on information
 # about the benchmark index and the risk free rates of return.
@@ -70,7 +71,7 @@ class TradingEnvironment(object):
         bm_symbol='^GSPC',
         exchange_tz="US/Eastern",
         max_date=None,
-        env_trading_calendar=NYSEExchangeCalendar,
+        trading_schedule=default_nyse_schedule,
         asset_db_path=':memory:'
     ):
         """
@@ -97,14 +98,15 @@ class TradingEnvironment(object):
         # self.open_and_closes = env_trading_calendar.open_and_closes.loc[
         #     self.trading_days]
 
-        calendar = env_trading_calendar()
-
         self.bm_symbol = bm_symbol
         if not load:
             load = load_market_data
 
-        self.benchmark_returns, self.treasury_curves = \
-            load(calendar.day, calendar.schedule.index, self.bm_symbol)
+        self.benchmark_returns, self.treasury_curves = load(
+            trading_schedule.day,
+            trading_schedule.schedule.index,
+            self.bm_symbol,
+        )
 
         if max_date:
             tr_c = self.treasury_curves
@@ -495,7 +497,7 @@ class SimulationParameters(object):
                  capital_base=10e3,
                  emission_rate='daily',
                  data_frequency='daily',
-                 cal=None):
+                 trading_schedule=None):
 
         self.period_start = period_start
         self.period_end = period_end
@@ -507,55 +509,55 @@ class SimulationParameters(object):
         # copied to algorithm's environment for runtime access
         self.arena = 'backtest'
 
-        if cal is not None:
-            self.update_internal_from_cal(cal=cal)
+        if trading_schedule is not None:
+            self.update_internal_from_trading_schedule(
+                trading_schedule=trading_schedule
+            )
 
-    def update_internal_from_cal(self, cal):
+    def update_internal_from_trading_schedule(self, trading_schedule):
 
         assert self.period_start <= self.period_end, \
             "Period start falls after period end."
 
-        assert self.period_start <= cal.last_trading_day, \
+        assert self.period_start <= trading_schedule.last_trading_day, \
             "Period start falls after the last known trading day."
-        assert self.period_end >= cal.first_trading_day, \
+        assert self.period_end >= trading_schedule.first_trading_day, \
             "Period end falls before the first known trading day."
 
-        self.first_open = self._calculate_first_open(cal)
-        self.last_close = self._calculate_last_close(cal)
+        self.first_open = self._calculate_first_open(trading_schedule)
+        self.last_close = self._calculate_last_close(trading_schedule)
 
-        # take an inclusive slice of the environment's trading_days.
-        self.trading_days = cal.trading_days(self.first_open, self.last_close)
+        # Take the length of an inclusive slice of trading dates
+        self.trading_days = trading_schedule.trading_dates(
+            self.first_open, self.last_close
+        )
+        self.days_in_period = len(self.trading_days)
 
-    def _calculate_first_open(self, cal):
+    def _calculate_first_open(self, trading_schedule):
         """
         Finds the first trading day on or after self.period_start.
         """
         first_open = self.period_start
         one_day = datetime.timedelta(days=1)
 
-        while not cal.is_open_on_date(first_open):
+        while not trading_schedule.is_execution_date(first_open):
             first_open = first_open + one_day
 
-        mkt_open, _ = cal.open_and_close(first_open)
+        mkt_open, _ = trading_schedule.start_and_end(first_open)
         return mkt_open
 
-    def _calculate_last_close(self, cal):
+    def _calculate_last_close(self, trading_schedule):
         """
         Finds the last trading day on or before self.period_end
         """
         last_close = self.period_end
         one_day = datetime.timedelta(days=1)
 
-        while not cal.is_open_on_date(last_close):
+        while not trading_schedule.is_execution_date(last_close):
             last_close = last_close - one_day
 
-        _, mkt_close = cal.open_and_close(last_close)
+        _, mkt_close = trading_schedule.start_and_end(last_close)
         return mkt_close
-
-    @property
-    def days_in_period(self):
-        """return the number of trading days within the period [start, end)"""
-        return len(self.trading_days)
 
     def __repr__(self):
         return """

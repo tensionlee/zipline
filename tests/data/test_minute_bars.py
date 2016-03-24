@@ -33,7 +33,7 @@ from zipline.data.minute_bars import (
     BcolzMinuteOverlappingData,
     US_EQUITIES_MINUTES_PER_DAY,
 )
-from zipline.finance.trading import TradingEnvironment
+from zipline.utils.nyse_exchange_calendar import NYSEExchangeCalendar
 
 
 TEST_CALENDAR_START = Timestamp('2015-06-01', tz='UTC')
@@ -44,13 +44,9 @@ class BcolzMinuteBarTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.env = TradingEnvironment()
-        all_market_opens = cls.env.open_and_closes.market_open
-        indexer = all_market_opens.index.slice_indexer(
-            start=TEST_CALENDAR_START,
-            end=TEST_CALENDAR_STOP
-        )
-        cls.market_opens = all_market_opens[indexer]
+        cls.market_opens = NYSEExchangeCalendar().trading_days(
+            TEST_CALENDAR_START, TEST_CALENDAR_STOP
+        ).market_open
         cls.test_calendar_start = cls.market_opens.index[0]
         cls.test_calendar_stop = cls.market_opens.index[-1]
 

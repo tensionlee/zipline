@@ -27,7 +27,7 @@ from zipline.protocol import Event, DATASOURCE_TYPE
 from zipline.sources import (SpecificEquityTrades,
                              DataFrameSource,
                              DataPanelSource)
-from zipline.utils.nyse_exchange_calendar import NYSEExchangeCalendar
+from zipline.utils.trading_schedule import NYSETradingSchedule
 from zipline.finance.trading import (
     SimulationParameters, TradingEnvironment, noop_load
 )
@@ -46,15 +46,15 @@ def create_simulation_parameters(year=2006, start=None, end=None,
                                  num_days=None,
                                  data_frequency='daily',
                                  emission_rate='daily',
-                                 cal=None):
-    if cal is None:
-        cal = NYSEExchangeCalendar()
+                                 trading_schedule=None):
+    if trading_schedule is None:
+        trading_schedule = NYSETradingSchedule()
     if start is None:
         start = pd.Timestamp("{0}-01-01".format(year), tz='UTC')
     if end is None:
         if num_days:
-            start_index = cal.trading_days.searchsorted(start)
-            end = cal.trading_days[start_index + num_days - 1]
+            start_index = trading_schedule.trading_days.searchsorted(start)
+            end = trading_schedule.trading_days[start_index + num_days - 1]
         else:
             end = pd.Timestamp("{0}-12-31".format(year), tz='UTC')
     sim_params = SimulationParameters(
@@ -63,7 +63,7 @@ def create_simulation_parameters(year=2006, start=None, end=None,
         capital_base=capital_base,
         data_frequency=data_frequency,
         emission_rate=emission_rate,
-        cal=cal,
+        trading_schedule=trading_schedule,
     )
 
     return sim_params

@@ -36,6 +36,11 @@ end_base = pd.Timestamp('today', tz='UTC')
 end_default = end_base + pd.Timedelta(days=365)
 
 
+def normalize_date(date):
+    date = pd.Timestamp(date, tz='UTC')
+    return pd.tseries.tools.normalize_date(date)
+
+
 def delta_from_time(t):
     """
     Convert a datetime.time into a timedelta.
@@ -380,7 +385,3 @@ class ExchangeCalendar(with_metaclass(ABCMeta)):
             every @step minute.
         """
         raise NotImplementedError()
-
-    def normalize_date(self, date):
-        date = pd.Timestamp(date, tz='UTC')
-        return pd.tseries.tools.normalize_date(date)

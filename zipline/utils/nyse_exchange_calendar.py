@@ -41,7 +41,9 @@ from pandas.tseries.holiday import(
 from pandas.tseries.offsets import Day
 from pytz import timezone
 
-from zipline.utils.exchange_calendar import ExchangeCalendar
+from zipline.utils.exchange_calendar import (
+    ExchangeCalendar, normalize_date
+)
 
 # Useful resources for making changes to this file:
 # http://www.nyse.com/pdfs/closings.pdf
@@ -340,7 +342,7 @@ class NYSEExchangeCalendar(ExchangeCalendar):
         bool
             True if  exchange is open at any time during the day containing @dt
         """
-        dt_normalized = self.normalize_date(dt)
+        dt_normalized = normalize_date(dt)
         return dt_normalized in self.schedule.index
 
     def trading_days(self, start, end):
@@ -440,7 +442,7 @@ class NYSEExchangeCalendar(ExchangeCalendar):
         #
         while not self.is_open_on_date(dt):
             dt += Timedelta(days=1)
-        return self.normalize_date(dt)
+        return normalize_date(dt)
 
     def minutes_for_date(self, dt):
         """

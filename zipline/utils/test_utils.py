@@ -798,8 +798,8 @@ def create_data_portal(env, tempdir, sim_params, sids, adjustment_reader=None):
         )
 
 
-def write_bcolz_minute_data(env, days, path, df_dict):
-    market_opens = env.open_and_closes.market_open.loc[days]
+def write_bcolz_minute_data(cal, days, path, df_dict):
+    market_opens = cal.schedule.loc[days].market_open
 
     writer = BcolzMinuteBarWriter(
         days[0],

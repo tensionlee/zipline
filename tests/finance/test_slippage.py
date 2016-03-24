@@ -39,6 +39,7 @@ from zipline.data.minute_bars import BcolzMinuteBarReader
 from zipline.data.data_portal import DataPortal
 from zipline.protocol import BarData
 from zipline.utils.test_utils import write_bcolz_minute_data
+from zipline.utils.nyse_exchange_calendar import NYSEExchangeCalendar
 
 
 class SlippageTestCase(TestCase):
@@ -48,13 +49,15 @@ class SlippageTestCase(TestCase):
         cls.tempdir = TempDirectory()
         cls.env = TradingEnvironment()
 
+        cls.nyse_cal = NYSEExchangeCalendar()
+
         cls.sim_params = SimulationParameters(
             period_start=pd.Timestamp("2006-01-05 14:31", tz="utc"),
             period_end=pd.Timestamp("2006-01-05 14:36", tz="utc"),
             capital_base=1.0e5,
             data_frequency="minute",
             emission_rate='daily',
-            env=cls.env
+            cal=cls.nyse_cal,
         )
 
         cls.sids = [133]
@@ -77,7 +80,7 @@ class SlippageTestCase(TestCase):
         }
 
         write_bcolz_minute_data(
-            cls.env,
+            cls.nyse_cal,
             pd.date_range(
                 start=normalize_date(cls.minutes[0]),
                 end=normalize_date(cls.minutes[-1])
@@ -121,7 +124,7 @@ class SlippageTestCase(TestCase):
             }
 
             write_bcolz_minute_data(
-                self.env,
+                self.nyse_cal,
                 pd.date_range(
                     start=normalize_date(self.minutes[0]),
                     end=normalize_date(self.minutes[-1])
@@ -518,7 +521,7 @@ class SlippageTestCase(TestCase):
             }
 
             write_bcolz_minute_data(
-                self.env,
+                self.nyse_cal,
                 pd.date_range(
                     start=normalize_date(self.minutes[0]),
                     end=normalize_date(self.minutes[-1])

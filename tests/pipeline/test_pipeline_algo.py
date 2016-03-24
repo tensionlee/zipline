@@ -420,8 +420,11 @@ class PipelineAlgorithmTestCase(TestCase):
     @classmethod
     def create_adjustment_reader(cls, tempdir):
         dbpath = tempdir.getpath('adjustments.sqlite')
-        writer = SQLiteAdjustmentWriter(dbpath, cls.env.trading_days,
-                                        MockDailyBarSpotReader())
+        writer = SQLiteAdjustmentWriter(
+            dbpath,
+            trading.default_nyse_schedule.schedule.index,
+            MockDailyBarSpotReader()
+        )
         splits = DataFrame.from_records([
             {
                 'effective_date': str_to_seconds('2014-06-09'),
