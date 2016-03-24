@@ -15,11 +15,15 @@ from textwrap import dedent
 
 import bcolz
 from bcolz import ctable
-import numpy as np
+from intervaltree import IntervalTree
 from os.path import join
 import json
 import os
+import numpy as np
+from numpy import timedelta64
 import pandas as pd
+
+from zipline.utils.memoize import remember_last, lazyval
 
 US_EQUITIES_MINUTES_PER_DAY = 390
 
@@ -91,12 +95,22 @@ class BcolzMinuteBarMetadata(object):
             raw_data = json.load(fp)
             first_trading_day = pd.Timestamp(
                 raw_data['first_trading_day'], tz='UTC')
-            minute_index = pd.to_datetime(raw_data['minute_index'],
+            market_opens = pd.to_datetime(raw_data['market_opens'],
+                                          unit='m',
                                           utc=True)
+            market_closes = pd.to_datetime(raw_data['market_closes'],
+                                           unit='m',
+                                           utc=True)
             ohlc_ratio = raw_data['ohlc_ratio']
-            return cls(first_trading_day, minute_index, ohlc_ratio)
+            return cls(first_trading_day,
+                       market_opens,
+                       market_closes,
+                       ohlc_ratio)
 
-    def __init__(self, first_trading_day, minute_index, ohlc_ratio):
+    def __init__(self, first_trading_day,
+                 market_opens,
+                 market_closes,
+                 ohlc_ratio):
         """
         Parameters:
         -----------
@@ -110,7 +124,8 @@ class BcolzMinuteBarMetadata(object):
              float data can be stored as an integer.
         """
         self.first_trading_day = first_trading_day
-        self.minute_index = minute_index
+        self.market_opens = market_opens
+        self.market_closes = market_closes
         self.ohlc_ratio = ohlc_ratio
 
     def write(self, rootdir):
@@ -130,7 +145,12 @@ class BcolzMinuteBarMetadata(object):
         """
         metadata = {
             'first_trading_day': str(self.first_trading_day.date()),
-            'minute_index': self.minute_index.asi8.tolist(),
+            'market_opens': self.market_opens.values.
+            astype('datetime64[m]').
+            astype(int).tolist(),
+            'market_closes': self.market_closes.values.
+            astype('datetime64[m]').
+            astype(int).tolist(),
             'ohlc_ratio': self.ohlc_ratio,
         }
         with open(self.metadata_path(rootdir), 'w+') as fp:
@@ -184,6 +204,7 @@ class BcolzMinuteBarWriter(object):
                  first_trading_day,
                  rootdir,
                  market_opens,
+                 market_closes,
                  minutes_per_day,
                  ohlc_ratio=OHLC_RATIO,
                  expectedlen=DEFAULT_EXPECTEDLEN):
@@ -233,6 +254,8 @@ class BcolzMinuteBarWriter(object):
         self._first_trading_day = first_trading_day
         self._market_opens = market_opens[
             market_opens.index.slice_indexer(start=self._first_trading_day)]
+        self._market_closes = market_closes[
+            market_closes.index.slice_indexer(start=self._first_trading_day)]
         self._trading_days = market_opens.index
         self._minutes_per_day = minutes_per_day
         self._expectedlen = expectedlen
@@ -243,7 +266,8 @@ class BcolzMinuteBarWriter(object):
 
         metadata = BcolzMinuteBarMetadata(
             self._first_trading_day,
-            self._minute_index,
+            self._market_opens,
+            self._market_closes,
             self._ohlc_ratio,
         )
         metadata.write(self._rootdir)
@@ -521,7 +545,12 @@ class BcolzMinuteBarReader(object):
         metadata = self._get_metadata()
 
         self._first_trading_day = metadata.first_trading_day
-        self._minute_index = metadata.minute_index
+
+        self._market_opens = metadata.market_opens
+        self._market_open_values = metadata.market_opens.values.\
+            astype('datetime64[m]').astype(int)
+        self._market_closes = metadata.market_closes
+
         self._ohlc_inverse = 1.0 / metadata.ohlc_ratio
 
         self._carrays = {
@@ -532,8 +561,58 @@ class BcolzMinuteBarReader(object):
             'volume': {},
         }
 
+    @lazyval
+    def _minute_index(self):
+        return _calc_minute_index(self._market_opens,
+                                  US_EQUITIES_MINUTES_PER_DAY)
+
     def _get_metadata(self):
         return BcolzMinuteBarMetadata.read(self._rootdir)
+
+    def _minutes_to_exclude(self):
+        market_opens = self._market_opens.values.astype('datetime64[m]')
+        market_closes = self._market_closes.values.astype('datetime64[m]')
+        minutes_per_day = (
+            self._market_closes.values.astype('datetime64[m]')
+            -
+            self._market_opens.values.astype('datetime64[m]')
+        )
+        early_indices = np.where(
+            minutes_per_day != US_EQUITIES_MINUTES_PER_DAY - 1)[0]
+        regular_closes = market_opens[early_indices] + timedelta64(
+            US_EQUITIES_MINUTES_PER_DAY - 1, 'm')
+        early_closes = market_closes[early_indices]
+        minutes = [pd.date_range(early, regular, freq='min')
+                   for early, regular
+                   in zip(early_closes + 1, regular_closes)]
+        return minutes
+
+    @lazyval
+    def _minute_exclusion_tree(self):
+        itree = IntervalTree()
+        for minute_range in self._minutes_to_exclude():
+            start = minute_range[0].value
+            end = minute_range[-1].value
+            positions = [self._find_position_of_minute(m)
+                         for m in minute_range]
+            data = (minute_range, positions)
+            itree[start:end + 1] = data
+        return itree
+
+    def _exclusion_indices_for_range(self, start, end):
+        itree = self._minute_exclusion_tree
+        if itree.overlaps(start.value, end.value):
+            ranges = []
+            intervals = itree[start.value:end.value]
+            for interval in intervals:
+                minute_index, positions = interval.data
+                excl_slice = minute_index.slice_indexer(start, end)
+                exclusion_indices = (positions[excl_slice.start],
+                                     positions[excl_slice.stop - 1])
+                ranges.append(exclusion_indices)
+            return ranges
+        else:
+            return None
 
     def _get_carray_path(self, sid, field):
         sid_subdir = _sid_subdir_path(sid)
@@ -638,9 +717,18 @@ class BcolzMinuteBarReader(object):
         start_idx = self._find_position_of_minute(start_dt)
         end_idx = self._find_position_of_minute(end_dt)
 
+        num_minutes = (end_idx - start_idx + 1)
+
         results = []
 
-        shape = (len(sids), (end_idx - start_idx + 1))
+        indices_to_exclude = self._exclusion_indices_for_range(
+            start_dt, end_dt)
+        if indices_to_exclude is not None:
+            for excl_start, excl_stop in indices_to_exclude:
+                length = excl_stop - excl_start + 1
+                num_minutes -= length
+
+        shape = (len(sids), num_minutes)
 
         for field in fields:
             if field != 'volume':
@@ -651,6 +739,11 @@ class BcolzMinuteBarReader(object):
             for i, sid in enumerate(sids):
                 carray = self._open_minute_file(field, sid)
                 values = carray[start_idx:end_idx + 1]
+                if indices_to_exclude is not None:
+                    for excl_start, excl_stop in indices_to_exclude:
+                        excl_slice = np.s_[
+                            excl_start - start_idx:excl_stop - start_idx + 1]
+                        values = np.delete(values, excl_slice)
                 where = values != 0
                 out[i, where] = values[where]
             if field != 'volume':

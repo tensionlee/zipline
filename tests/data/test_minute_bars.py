@@ -38,7 +38,7 @@ from zipline.finance.trading import TradingEnvironment
 
 
 TEST_CALENDAR_START = Timestamp('2015-06-01', tz='UTC')
-TEST_CALENDAR_STOP = Timestamp('2015-06-30', tz='UTC')
+TEST_CALENDAR_STOP = Timestamp('2015-12-31', tz='UTC')
 
 
 class BcolzMinuteBarTestCase(TestCase):
@@ -47,11 +47,13 @@ class BcolzMinuteBarTestCase(TestCase):
     def setUpClass(cls):
         cls.env = TradingEnvironment()
         all_market_opens = cls.env.open_and_closes.market_open
+        all_market_closes = cls.env.open_and_closes.market_close
         indexer = all_market_opens.index.slice_indexer(
             start=TEST_CALENDAR_START,
             end=TEST_CALENDAR_STOP
         )
         cls.market_opens = all_market_opens[indexer]
+        cls.market_closes = all_market_closes[indexer]
         cls.test_calendar_start = cls.market_opens.index[0]
         cls.test_calendar_stop = cls.market_opens.index[-1]
 
@@ -65,6 +67,7 @@ class BcolzMinuteBarTestCase(TestCase):
             TEST_CALENDAR_START,
             self.dest,
             self.market_opens,
+            self.market_closes,
             US_EQUITIES_MINUTES_PER_DAY,
         )
         self.reader = BcolzMinuteBarReader(self.dest)
@@ -510,6 +513,54 @@ class BcolzMinuteBarTestCase(TestCase):
         minutes = [start_minute,
                    start_minute + Timedelta('1 min'),
                    start_minute + Timedelta('2 min')]
+        sids = [1, 2]
+        data_1 = DataFrame(
+            data={
+                'open': [15.0, nan, 15.1],
+                'high': [17.0, nan, 17.1],
+                'low': [11.0, nan, 11.1],
+                'close': [14.0, nan, 14.1],
+                'volume': [1000, 0, 1001]
+            },
+            index=minutes)
+        self.writer.write(sids[0], data_1)
+
+        data_2 = DataFrame(
+            data={
+                'open': [25.0, nan, 25.1],
+                'high': [27.0, nan, 27.1],
+                'low': [21.0, nan, 21.1],
+                'close': [24.0, nan, 24.1],
+                'volume': [2000, 0, 2001]
+            },
+            index=minutes)
+        self.writer.write(sids[1], data_2)
+
+        reader = BcolzMinuteBarReader(self.dest)
+
+        columns = ['open', 'high', 'low', 'close', 'volume']
+        sids = [sids[0], sids[1]]
+        arrays = reader.unadjusted_window(
+            columns, minutes[0], minutes[-1], sids)
+
+        data = {sids[0]: data_1, sids[1]: data_2}
+
+        for i, col in enumerate(columns):
+            for j, sid in enumerate(sids):
+                assert_almost_equal(data[sid][col], arrays[i][j])
+
+    def test_unadjusted_minutes_early_close(self):
+        """
+        Test unadjusted minutes.
+        """
+        # An early close date 2015-12-24.
+        early_close_date = Timestamp('2015-12-24', tz='UTC')
+        day_after = Timestamp('2015-12-28', tz='UTC')
+        early_close_dt = self.market_closes[early_close_date]
+        day_after_open_dt = self.market_opens[day_after]
+        minutes = [early_close_dt,
+                   day_after_open_dt,
+                   day_after_open_dt + Timedelta('1 min')]
         sids = [1, 2]
         data_1 = DataFrame(
             data={
