@@ -17,7 +17,7 @@ import os
 
 from unittest import TestCase
 
-from numpy import nan, array
+from numpy import nan, array, full, zeros
 from numpy.testing import assert_almost_equal
 from pandas import (
     DataFrame,
@@ -25,6 +25,7 @@ from pandas import (
     Timestamp,
     Timedelta,
     NaT,
+    date_range,
 )
 from testfixtures import TempDirectory
 
@@ -450,6 +451,44 @@ class BcolzMinuteBarTestCase(TestCase):
         volume_price = self.reader.get_value(sid, minute, 'volume')
 
         self.assertEquals(100.0, volume_price)
+
+    def test_nans(self):
+        """
+        Test writing empty data.
+        """
+        sid = 1
+        last_date = self.writer.last_date_in_output_for_sid(sid)
+        self.assertIs(last_date, NaT)
+
+        self.writer.pad(sid, TEST_CALENDAR_START)
+
+        last_date = self.writer.last_date_in_output_for_sid(sid)
+        self.assertEqual(last_date, TEST_CALENDAR_START)
+
+        freq = self.market_opens.index.freq
+        minute = self.market_opens[TEST_CALENDAR_START + freq]
+        minutes = date_range(minute, minute + Timedelta('8 min'), freq='min')
+        data = DataFrame(
+            data={
+                'open': [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+                'high': [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+                'low': [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+                'close': [nan, nan, nan, nan, nan, nan, nan, nan, nan],
+                'volume': [0, 0, 0, 0, 0, 0, 0, 0, 0]
+            },
+            index=[minutes])
+        self.writer.write(sid, data)
+
+        fields = ['open', 'high', 'low', 'close', 'volume']
+
+        ohlcv_window = self.reader.unadjusted_window(
+            fields, minutes[0], minutes[-1], [sid])
+
+        for i, field in enumerate(fields):
+            if field != 'volume':
+                assert_almost_equal(full(9, nan), ohlcv_window[i][0])
+            else:
+                assert_almost_equal(zeros(9), ohlcv_window[i][0])
 
     def test_write_cols(self):
         minute_0 = self.market_opens[self.test_calendar_start]
