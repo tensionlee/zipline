@@ -58,4 +58,4 @@ class BlazeEarningsCalendarLoader(BlazeEventsLoader):
     })
 
     concrete_loader = EarningsCalendarLoader
-    dataset = EarningsCalendar
+    default_dataset = EarningsCalendar

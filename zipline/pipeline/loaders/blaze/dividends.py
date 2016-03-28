@@ -72,7 +72,7 @@ class BlazeDividendsByAnnouncementDateLoader(BlazeEventsLoader):
     })
 
     concrete_loader = DividendsByAnnouncementDateLoader
-    dataset = DividendsByAnnouncementDate
+    default_dataset = DividendsByAnnouncementDate
 
 
 class BlazeDividendsByExDateLoader(BlazeEventsLoader):
@@ -128,7 +128,7 @@ class BlazeDividendsByExDateLoader(BlazeEventsLoader):
     })
 
     concrete_loader = DividendsByExDateLoader
-    dataset = DividendsByExDate
+    default_dataset = DividendsByExDate
 
 
 class BlazeDividendsByPayDateLoader(BlazeEventsLoader):
@@ -184,4 +184,4 @@ class BlazeDividendsByPayDateLoader(BlazeEventsLoader):
     })
 
     concrete_loader = DividendsByPayDateLoader
-    dataset = DividendsByPayDate
+    default_dataset = DividendsByPayDate

@@ -68,7 +68,7 @@ class BlazeCashBuybackAuthorizationsLoader(BlazeEventsLoader):
     })
 
     concrete_loader = CashBuybackAuthorizationsLoader
-    dataset = CashBuybackAuthorizations
+    default_dataset = CashBuybackAuthorizations
 
 
 class BlazeShareBuybackAuthorizationsLoader(BlazeEventsLoader):
@@ -123,4 +123,4 @@ class BlazeShareBuybackAuthorizationsLoader(BlazeEventsLoader):
     })
 
     concrete_loader = ShareBuybackAuthorizationsLoader
-    dataset = ShareBuybackAuthorizations
+    default_dataset = ShareBuybackAuthorizations

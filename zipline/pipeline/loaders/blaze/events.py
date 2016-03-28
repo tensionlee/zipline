@@ -56,7 +56,7 @@ class BlazeEventsLoader(PipelineLoader):
     If the '{TS_FIELD_NAME}' field is not included it is assumed that we
     start the backtest with knowledge of all announcements.
     """
-    dataset = None
+    default_dataset = None
 
     @preprocess(data_query_tz=optionally(ensure_timezone))
     def __init__(self,
@@ -64,7 +64,11 @@ class BlazeEventsLoader(PipelineLoader):
                  resources=None,
                  odo_kwargs=None,
                  data_query_time=None,
-                 data_query_tz=None):
+                 data_query_tz=None,
+                 dataset=default_dataset):
+        if not dataset:
+            dataset = self.default_dataset
+
         dshape = expr.dshape
 
         if not istabular(dshape):
@@ -78,7 +82,7 @@ class BlazeEventsLoader(PipelineLoader):
             resources,
         )
         self._odo_kwargs = odo_kwargs if odo_kwargs is not None else {}
-        self._dataset = self.dataset
+        self._dataset = dataset
         check_data_query_args(data_query_time, data_query_tz)
         self._data_query_time = data_query_time
         self._data_query_tz = data_query_tz
