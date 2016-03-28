@@ -168,11 +168,11 @@ class BlazeCashBuybackAuthLoaderTestCase(CashBuybackAuthLoaderTestCase):
     """
     loader_type = BlazeCashBuybackAuthorizationsLoader
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         _, mapping = super(
             BlazeCashBuybackAuthLoaderTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return (bz.data(pd.concat(
             pd.DataFrame({
                 BUYBACK_ANNOUNCEMENT_FIELD_NAME:
@@ -192,11 +192,11 @@ class BlazeShareBuybackAuthLoaderTestCase(ShareBuybackAuthLoaderTestCase):
     """
     loader_type = BlazeShareBuybackAuthorizationsLoader
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         _, mapping = super(
             BlazeShareBuybackAuthLoaderTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return (bz.data(pd.concat(
             pd.DataFrame({
                 BUYBACK_ANNOUNCEMENT_FIELD_NAME:
@@ -215,11 +215,11 @@ class BlazeShareBuybackAuthLoaderNotInteractiveTestCase(
         BlazeShareBuybackAuthLoaderTestCase):
     """Test case for passing a non-interactive symbol and a dict of resources.
     """
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         (bound_expr,) = super(
             BlazeShareBuybackAuthLoaderNotInteractiveTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return swap_resources_into_scope(bound_expr, {})
 
 
@@ -227,9 +227,9 @@ class BlazeCashBuybackAuthLoaderNotInteractiveTestCase(
         BlazeCashBuybackAuthLoaderTestCase):
     """Test case for passing a non-interactive symbol and a dict of resources.
     """
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         (bound_expr,) = super(
             BlazeCashBuybackAuthLoaderNotInteractiveTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return swap_resources_into_scope(bound_expr, {})

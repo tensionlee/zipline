@@ -126,10 +126,6 @@ class EarningsCalendarLoaderTestCase(WithPipelineEventDataLoader,
     }
 
     @classmethod
-    def get_sids(cls):
-        return range(5)
-
-    @classmethod
     def get_dataset(cls):
         return {sid: df for sid, df in enumerate(earnings_cases)}
 
@@ -201,11 +197,11 @@ class EarningsCalendarLoaderTestCase(WithPipelineEventDataLoader,
 class BlazeEarningsCalendarLoaderTestCase(EarningsCalendarLoaderTestCase):
     loader_type = BlazeEarningsCalendarLoader
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         _, mapping = super(
             BlazeEarningsCalendarLoaderTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return (bz.data(pd.concat(
             pd.DataFrame({
                 ANNOUNCEMENT_FIELD_NAME: df[ANNOUNCEMENT_FIELD_NAME],
@@ -221,9 +217,9 @@ class BlazeEarningsCalendarLoaderNotInteractiveTestCase(
     """Test case for passing a non-interactive symbol and a dict of resources.
     """
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         (bound_expr,) = super(
             BlazeEarningsCalendarLoaderNotInteractiveTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return swap_resources_into_scope(bound_expr, {})

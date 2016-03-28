@@ -200,10 +200,6 @@ class DividendsByAnnouncementDateTestCase(WithPipelineEventDataLoader,
     }
 
     @classmethod
-    def get_sids(cls):
-        return range(0, 5)
-
-    @classmethod
     def get_dataset(cls):
         return {sid:
                 frame.drop([EX_DATE_FIELD_NAME,
@@ -256,11 +252,11 @@ class BlazeDividendsByAnnouncementDateTestCase(
 ):
     loader_type = BlazeDividendsByAnnouncementDateLoader
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         _, mapping = super(
             BlazeDividendsByAnnouncementDateTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return (bz.Data(pd.concat(
             pd.DataFrame({
                 ANNOUNCEMENT_FIELD_NAME: df[ANNOUNCEMENT_FIELD_NAME],
@@ -277,11 +273,11 @@ class BlazeDividendsByAnnouncementDateNotInteractiveTestCase(
     """Test case for passing a non-interactive symbol and a dict of resources.
     """
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         (bound_expr,) = super(
             BlazeDividendsByAnnouncementDateNotInteractiveTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return swap_resources_into_scope(bound_expr, {})
 
 
@@ -290,17 +286,13 @@ class DividendsByExDateTestCase(WithPipelineEventDataLoader, ZiplineTestCase):
     Tests for loading the dividends by ex date data.
     """
     pipeline_columns = {
-        NEXT_EX_DATE: DividendsByExDate.next_ex_date.latest,
-        PREVIOUS_EX_DATE: DividendsByExDate.previous_ex_date.latest,
+        NEXT_EX_DATE: DividendsByExDate.next_date.latest,
+        PREVIOUS_EX_DATE: DividendsByExDate.previous_date.latest,
         NEXT_AMOUNT: DividendsByExDate.next_amount.latest,
         PREVIOUS_AMOUNT: DividendsByExDate.previous_amount.latest,
         DAYS_TO_NEXT_EX_DATE: BusinessDaysUntilNextExDate(),
         DAYS_SINCE_PREV_EX_DATE: BusinessDaysSincePreviousExDate()
     }
-
-    @classmethod
-    def get_sids(cls):
-        return range(0, 5)
 
     @classmethod
     def get_dataset(cls):
@@ -343,11 +335,11 @@ class DividendsByExDateTestCase(WithPipelineEventDataLoader, ZiplineTestCase):
 class BlazeDividendsByExDateLoaderTestCase(DividendsByExDateTestCase):
     loader_type = BlazeDividendsByExDateLoader
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         _, mapping = super(
             BlazeDividendsByExDateLoaderTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return (bz.Data(pd.concat(
             pd.DataFrame({
                 EX_DATE_FIELD_NAME: df[EX_DATE_FIELD_NAME],
@@ -364,11 +356,11 @@ class BlazeDividendsByExDateLoaderNotInteractiveTestCase(
     """Test case for passing a non-interactive symbol and a dict of resources.
     """
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         (bound_expr,) = super(
             BlazeDividendsByExDateLoaderNotInteractiveTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return swap_resources_into_scope(bound_expr, {})
 
 
@@ -377,15 +369,11 @@ class DividendsByPayDateTestCase(WithPipelineEventDataLoader, ZiplineTestCase):
     Tests for loading the dividends by pay date data.
     """
     pipeline_columns = {
-        NEXT_PAY_DATE: DividendsByPayDate.next_pay_date.latest,
-        PREVIOUS_PAY_DATE: DividendsByPayDate.previous_pay_date.latest,
+        NEXT_PAY_DATE: DividendsByPayDate.next_date.latest,
+        PREVIOUS_PAY_DATE: DividendsByPayDate.previous_date.latest,
         NEXT_AMOUNT: DividendsByPayDate.next_amount.latest,
         PREVIOUS_AMOUNT: DividendsByPayDate.previous_amount.latest,
     }
-
-    @classmethod
-    def get_sids(cls):
-        return range(0, 5)
 
     @classmethod
     def get_dataset(cls):
@@ -419,11 +407,11 @@ class DividendsByPayDateTestCase(WithPipelineEventDataLoader, ZiplineTestCase):
 class BlazeDividendsByPayDateLoaderTestCase(DividendsByPayDateTestCase):
     loader_type = BlazeDividendsByPayDateLoader
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         _, mapping = super(
             BlazeDividendsByPayDateLoaderTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return (bz.Data(pd.concat(
             pd.DataFrame({
                 PAY_DATE_FIELD_NAME: df[PAY_DATE_FIELD_NAME],
@@ -440,9 +428,9 @@ class BlazeDividendsByPayDateLoaderNotInteractiveTestCase(
     """Test case for passing a non-interactive symbol and a dict of resources.
     """
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         (bound_expr,) = super(
             BlazeDividendsByPayDateLoaderNotInteractiveTestCase,
             self,
-        ).loader_args(dates)
+        ).pipeline_event_loader_args(dates)
         return swap_resources_into_scope(bound_expr, {})

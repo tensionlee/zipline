@@ -311,31 +311,27 @@ class WithPipelineEventDataLoader(WithAssetFinder):
     `loader_type` must return the loader class to use for loading the dataset
     `make_asset_finder` returns a default asset finder which can be overridden.
     """
-    @abc.abstractproperty
+    @classmethod
     def get_sids(cls):
-        raise NotImplementedError('get_sids')
-
-    @abc.abstractproperty
-    def get_dataset(self):
-        raise NotImplementedError('get_dataset')
-
-    @abc.abstractproperty
-    def loader_type(self):
-        raise NotImplementedError('loader_type')
+        return range(0, 5)
 
     @classmethod
-    def make_asset_finder(cls):
-        return cls.enter_class_context(
-            tmp_asset_finder(
-                equities=make_simple_equity_info(
-                    cls.get_sids(),
-                    start_date=pd.Timestamp('2013-01-01', tz='UTC'),
-                    end_date=pd.Timestamp('2015-01-01', tz='UTC'),
-                )
-            )
+    def get_dataset(cls):
+        return {sid: pd.DataFrame() for sid in cls.get_sids()}
+
+    @classmethod
+    def loader_type(self):
+        return None
+
+    @classmethod
+    def make_equities_info(cls):
+        return make_simple_equity_info(
+            cls.get_sids(),
+            start_date=pd.Timestamp('2013-01-01', tz='UTC'),
+            end_date=pd.Timestamp('2015-01-01', tz='UTC'),
         )
 
-    def loader_args(self, dates):
+    def pipeline_event_loader_args(self, dates):
         """Construct the base  object to pass to the loader.
 
         Parameters
@@ -350,11 +346,11 @@ class WithPipelineEventDataLoader(WithAssetFinder):
         """
         return dates, self.get_dataset()
 
-    def setup_engine(self, dates):
+    def pipeline_event_setup_engine(self, dates):
         """
         Make a Pipeline Enigne object based on the given dates.
         """
-        loader = self.loader_type(*self.loader_args(dates))
+        loader = self.loader_type(*self.pipeline_event_loader_args(dates))
         return SimplePipelineEngine(lambda _: loader, dates, self.asset_finder)
 
     @staticmethod
@@ -404,7 +400,7 @@ class WithPipelineEventDataLoader(WithAssetFinder):
         ], utc=True),
     ))
     def test_compute(self, dates):
-        engine = self.setup_engine(dates)
+        engine = self.pipeline_event_setup_engine(dates)
         cols = self.setup(dates)
 
         pipe = Pipeline(
