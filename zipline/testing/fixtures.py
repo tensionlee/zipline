@@ -1,4 +1,3 @@
-import abc
 from unittest import TestCase
 
 from contextlib2 import ExitStack
