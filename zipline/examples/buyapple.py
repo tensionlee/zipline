@@ -16,14 +16,15 @@
 
 from zipline.api import order, record, symbol
 
+stock = '000001.SZ'
 
 def initialize(context):
     pass
 
 
 def handle_data(context, data):
-    order(symbol('AAPL'), 10)
-    record(AAPL=data[symbol('AAPL')].price)
+    order(symbol(stock), 10)
+    record(AAPL=data[symbol(stock)].price)
 
 
 # Note: this function can be removed if running
@@ -33,10 +34,10 @@ def analyze(context=None, results=None):
     # Plot the portfolio and asset data.
     ax1 = plt.subplot(211)
     results.portfolio_value.plot(ax=ax1)
-    ax1.set_ylabel('Portfolio value (USD)')
+    ax1.set_ylabel('Portfolio value (RMB)')
     ax2 = plt.subplot(212, sharex=ax1)
     results.AAPL.plot(ax=ax2)
-    ax2.set_ylabel('AAPL price (USD)')
+    ax2.set_ylabel('000001.SZ price (RMB)')
 
     # Show the plot.
     plt.gcf().set_size_inches(18, 8)
@@ -49,19 +50,28 @@ if __name__ == '__main__':
     from datetime import datetime
     import pytz
     from zipline.algorithm import TradingAlgorithm
-    from zipline.utils.factory import load_from_yahoo
+    from zipline.utils.factory import load_from_yahoo, load_from_wind
+
+    # Fetch wind data
+    from WindPy import w
+
+    w.start()
+
+    stock = "000001.SZ"
+    wsddata1 = w.wsd(stock, "close", "2014-01-01", "2014-11-01", "Fill=Previous")
 
     # Set the simulation start and end dates
     start = datetime(2014, 1, 1, 0, 0, 0, 0, pytz.utc)
     end = datetime(2014, 11, 1, 0, 0, 0, 0, pytz.utc)
 
     # Load price data from yahoo.
-    data = load_from_yahoo(stocks=['AAPL'], indexes={}, start=start,
-                           end=end)
+    # data = load_from_yahoo(stocks=[stock], indexes={}, start=start,
+    #                        end=end)
+    data = load_from_wind(wsddata1)
 
     # Create and run the algorithm.
     algo = TradingAlgorithm(initialize=initialize, handle_data=handle_data,
-                            identifiers=['AAPL'])
+                            identifiers=[stock])
     results = algo.run(data)
 
     analyze(results=results)

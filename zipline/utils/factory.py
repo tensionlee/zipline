@@ -35,7 +35,9 @@ from zipline.sources.test_source import create_trade
 
 # For backwards compatibility
 from zipline.data.loader import (load_from_yahoo,
-                                 load_bars_from_yahoo)
+                                 load_bars_from_yahoo,
+                                 load_from_wind
+                                 )
 
 __all__ = ['load_from_yahoo', 'load_bars_from_yahoo']
 

@@ -481,3 +481,66 @@ def load_prices_from_csv_folder(folderpath, identifier_col, tz='UTC'):
         else:
             data = pd.concat([data, raw], axis=1)
     return data
+
+def load_from_wind(wsddata):
+    # df = pd.DataFrame({key: d[close_key] for key, d in iteritems(data)})
+    data = OrderedDict()
+    data['000001.SZ'] = pd.DataFrame(data=wsddata.Data[0], index=wsddata.Times, columns=['close'])
+    df = pd.DataFrame({key: d['close'] for key, d in iteritems(data)})
+    df.index = df.index.tz_localize(pytz.utc)
+
+    return df
+
+
+def _load_raw_wind_data(indexes=None, stocks=None, start=None, end=None):
+    """Load closing prices from yahoo finance.
+
+    :Optional:
+        indexes : dict (Default: {'SPX': '^GSPC'})
+            Financial indexes to load.
+        stocks : list (Default: ['AAPL', 'GE', 'IBM', 'MSFT',
+                                 'XOM', 'AA', 'JNJ', 'PEP', 'KO'])
+            Stock closing prices to load.
+        start : datetime (Default: datetime(1993, 1, 1, 0, 0, 0, 0, pytz.utc))
+            Retrieve prices from start date on.
+        end : datetime (Default: datetime(2002, 1, 1, 0, 0, 0, 0, pytz.utc))
+            Retrieve prices until end date.
+
+    :Note:
+        This is based on code presented in a talk by Wes McKinney:
+        http://wesmckinney.com/files/20111017/notebook_output.pdf
+    """
+    assert indexes is not None or stocks is not None, """
+must specify stocks or indexes"""
+
+    if start is None:
+        start = pd.datetime(1990, 1, 1, 0, 0, 0, 0, pytz.utc)
+
+    if start is not None and end is not None:
+        assert start < end, "start date is later than end date."
+
+    data = OrderedDict()
+
+    if stocks is not None:
+        for stock in stocks:
+            logger.info('Loading stock: {}'.format(stock))
+            # stock_pathsafe = stock.replace(os.path.sep, '--')
+            # cache_filename = "{stock}-{start}-{end}.csv".format(
+            #     stock=stock_pathsafe,
+            #     start=start,
+            #     end=end).replace(':', '-')
+            # cache_filepath = get_cache_filepath(cache_filename)
+            # if os.path.exists(cache_filepath):
+            #     stkd = pd.DataFrame.from_csv(cache_filepath)
+            # else:
+            #     stkd = DataReader(stock, 'wind', start, end).sort_index()
+            #     stkd.to_csv(cache_filepath)
+            data[stock] = stkd
+
+    if indexes is not None:
+        for name, ticker in iteritems(indexes):
+            logger.info('Loading index: {} ({})'.format(name, ticker))
+            stkd = DataReader(ticker, 'yahoo', start, end).sort_index()
+            data[name] = stkd
+
+    return data

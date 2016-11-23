@@ -31,7 +31,7 @@ def initialize(context):
     add_history(100, '1d', 'price')
     add_history(300, '1d', 'price')
 
-    context.sym = symbol('AAPL')
+    context.sym = symbol('000001.SZ')
 
     context.i = 0
 
@@ -73,16 +73,16 @@ def analyze(context=None, results=None):
     fig = plt.figure()
     ax1 = fig.add_subplot(211)
     results.portfolio_value.plot(ax=ax1)
-    ax1.set_ylabel('Portfolio value (USD)')
+    ax1.set_ylabel('Portfolio value (RMB)')
 
     ax2 = fig.add_subplot(212)
-    ax2.set_ylabel('Price (USD)')
+    ax2.set_ylabel('Price (RMB)')
 
     # If data has been record()ed, then plot it.
     # Otherwise, log the fact that no data has been recorded.
     if ('AAPL' in results and 'short_mavg' in results and
-            'long_mavg' in results):
-        results['AAPL'].plot(ax=ax2)
+                'long_mavg' in results):
+        results['000001.SZ'].plot(ax=ax2)
         results[['short_mavg', 'long_mavg']].plot(ax=ax2)
 
         trans = results.ix[[t != [] for t in results.transactions]]
@@ -96,7 +96,7 @@ def analyze(context=None, results=None):
                  'v', markersize=10, color='k')
         plt.legend(loc=0)
     else:
-        msg = 'AAPL, short_mavg & long_mavg data not captured using record().'
+        msg = '000001.SZ, short_mavg & long_mavg data not captured using record().'
         ax2.annotate(msg, xy=(0.1, 0.5))
         log.info(msg)
 
@@ -109,20 +109,45 @@ if __name__ == '__main__':
     from datetime import datetime
     import pytz
     from zipline.algorithm import TradingAlgorithm
-    from zipline.utils.factory import load_from_yahoo
+    from zipline.utils.factory import load_from_wind, load_from_yahoo
+
+    # Fetch wind data
+    from WindPy import w
+
+    w.start()
+
+
+    def printpy(outdata):
+        if outdata.ErrorCode != 0:
+            print('error code:' + str(outdata.ErrorCode) + '\n');
+            return ();
+        strTemp = ''
+        for j in range(0, len(outdata.Fields)):
+            strTemp = strTemp + str(outdata.Fields[j]) + ''
+        print (strTemp)
+        for i in range(0, len(outdata.Data[0])):
+            # strTemp=strTemp1
+            if len(outdata.Times) > 1:
+                strTemp = str(outdata.Times[i]) + ' '
+            for k in range(0, len(outdata.Fields)):
+                strTemp = strTemp + str(outdata.Data[k][i]) + ' '
+            print(strTemp)
+
+
+    wsddata1 = w.wsd("000001.SZ", "close", "2011-01-01", "2013-01-01", "Fill=Previous")
+    # printpy(wsddata1)
 
     # Set the simulation start and end dates.
     start = datetime(2011, 1, 1, 0, 0, 0, 0, pytz.utc)
     end = datetime(2013, 1, 1, 0, 0, 0, 0, pytz.utc)
 
     # Load price data from yahoo.
-    data = load_from_yahoo(stocks=['AAPL'], indexes={}, start=start,
-                           end=end)
+    # data = load_from_yahoo(stocks=['AAPL'], indexes={}, start=start, end=end)
+    data2 = load_from_wind(wsddata1)
 
     # Create and run the algorithm.
-    algo = TradingAlgorithm(initialize=initialize, handle_data=handle_data,
-                            identifiers=['AAPL'])
-    results = algo.run(data)
+    algo = TradingAlgorithm(initialize=initialize, handle_data=handle_data, identifiers=['000001.SZ'])
+    results = algo.run(data2)
 
     # Plot the portfolio and asset data.
     analyze(results=results)
